@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>KanaLearn Promotional Poster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 1080px;
+      height: 1350px;
+      overflow: hidden;
+      font-family: 'Zen Kaku Gothic New', -apple-system, sans-serif;
+      background: #0d0f14;
+      color: #f8f9fa;
+      position: relative;
+    }
+
+    /* Background Ambient Lighting */
+    .bg-glow-top {
+      position: absolute;
+      top: -150px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(225, 29, 72, 0.22) 0%, rgba(13, 15, 20, 0) 70%);
+      pointer-events: none;
+    }
+
+    .bg-glow-bottom {
+      position: absolute;
+      bottom: -150px;
+      right: -100px;
+      width: 700px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(79, 70, 229, 0.18) 0%, rgba(13, 15, 20, 0) 70%);
+      pointer-events: none;
+    }
+
+    /* Subtle Geometric Grid */
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    .poster-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      padding: 64px 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Top Brand Bar */
+    .brand-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-icon {
+      width: 52px;
+      height: 52px;
+      background: #e11d48;
+      color: #fff;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(225, 29, 72, 0.4);
+    }
+
+    .brand-text {
+      font-size: 1.9rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-jp {
+      font-size: 1.1rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      color: #94a3b8;
+      font-weight: 700;
+      margin-left: 8px;
+    }
+
+    .tag-free {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      font-size: 0.95rem;
+      font-weight: 800;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Main Headline & Hook */
+    .hero-section {
+      margin-top: 24px;
+    }
+
+    .headline-pill {
+      display: inline-block;
+      background: rgba(225, 29, 72, 0.15);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+      color: #fb7185;
+      font-size: 1.05rem;
+      font-weight: 800;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      margin-bottom: 20px;
+    }
+
+    .main-headline {
+      font-size: 3.4rem;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+    }
+
+    .main-headline span {
+      color: #fb7185;
+    }
+
+    .sub-headline {
+      font-size: 1.4rem;
+      color: #94a3b8;
+      line-height: 1.5;
+      max-width: 900px;
+    }
+
+    /* Middle Showcase: Kana Cards & Yōon Equation */
+    .showcase-box {
+      background: rgba(23, 27, 36, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 36px 40px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .showcase-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 16px;
+    }
+
+    .showcase-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .showcase-badge {
+      font-size: 0.95rem;
+      color: #818cf8;
+      font-weight: 700;
+    }
+
+    /* Equation Row */
+    .yoon-equation-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    .eq-card {
+      background: #1e222d;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      width: 125px;
+      height: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .eq-card.highlight {
+      background: linear-gradient(145deg, #2a1622 0%, #1e1b2e 100%);
+      border-color: rgba(225, 29, 72, 0.5);
+      box-shadow: 0 12px 30px rgba(225, 29, 72, 0.25);
+    }
+
+    .eq-kana {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 3.6rem;
+      font-weight: 700;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .eq-card.highlight .eq-kana {
+      color: #fb7185;
+    }
+
+    .eq-romaji {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+
+    .eq-card.highlight .eq-romaji {
+      color: #f43f5e;
+    }
+
+    .eq-operator {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #64748b;
+    }
+
+    /* Tricky Pairs Preview */
+    .pairs-preview-row {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: rgba(15, 18, 25, 0.6);
+      border-radius: 14px;
+      padding: 16px 24px;
+      font-size: 1.05rem;
+      color: #cbd5e1;
+    }
+
+    .pair-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-weight: 700;
+    }
+
+    .pair-badge strong {
+      color: #f87171;
+      font-size: 1.35rem;
+    }
+
+    /* 3 Feature Highlights */
+    .features-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .feature-item {
+      background: rgba(23, 27, 36, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 22px 20px;
+    }
+
+    .feature-icon-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .feature-text {
+      font-size: 0.98rem;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+
+    /* Bottom CTA Card */
+    .cta-container {
+      background: linear-gradient(135deg, #b91c1c 0%, #e11d48 100%);
+      border-radius: 20px;
+      padding: 30px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 16px 36px rgba(225, 29, 72, 0.35);
+    }
+
+    .cta-text-wrap h3 {
+      font-size: 1.75rem;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .cta-text-wrap p {
+      font-size: 1.05rem;
+      color: #ffe4e6;
+      font-weight: 500;
+    }
+
+    .cta-btn-mock {
+      background: #ffffff;
+      color: #b91c1c;
+      font-size: 1.2rem;
+      font-weight: 900;
+      padding: 16px 28px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    /* Footer Meta */
+    .footer-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #64748b;
+      font-size: 0.95rem;
+      padding-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow-top"></div>
+  <div class="bg-glow-bottom"></div>
+  <div class="bg-grid"></div>
+
+  <div class="poster-container">
+    <!-- 1. Header -->
+    <div class="brand-header">
+      <div class="brand-title-wrap">
+        <div class="brand-icon">か</div>
+        <div class="brand-text">KanaLearn<span class="brand-jp">かなラーン</span></div>
+      </div>
+      <div class="tag-free">100% GRATIS • TANPA LOGIN</div>
+    </div>
+
+    <!-- 2. Headline & Hook -->
+    <div class="hero-section">
+      <div class="headline-pill">🚀 Belajar Bahasa Jepang Dari Nol</div>
+      <h1 class="main-headline">
+        Sering Tertukar Hiragana &amp;<br>
+        Bingung Kombinasi <span>Kya, Kyu, Kyo</span>?
+      </h1>
+      <p class="sub-headline">
+        Kuasai 224 karakter Hiragana, Katakana, Dakuten, hingga kombinasi Yōon dengan metode interaktif: <strong>Lihat → Dengar → Ingat → Uji!</strong>
+      </p>
+    </div>
+
+    <!-- 3. Visual Centerpiece: The Yōon Equation & Tricky Pairs -->
+    <div class="showcase-box">
+      <div class="showcase-header">
+        <div class="showcase-title">
+          <span>✨</span> Rahasia Menguasai Yōon (Kombinasi Huruf Kecil)
+        </div>
+        <div class="showcase-badge">1 Ketukan, Bukan 2 Suku Kata</div>
+      </div>
+
+      <!-- Equation -->
+      <div class="yoon-equation-row">
+        <div class="eq-card">
+          <div class="eq-kana">き</div>
+          <div class="eq-romaji">ki</div>
+        </div>
+        <div class="eq-operator">+</div>
+        <div class="eq-card">
+          <div class="eq-kana">ゃ</div>
+          <div class="eq-romaji">ya (kecil)</div>
+        </div>
+        <div class="eq-operator">=</div>
+        <div class="eq-card highlight">
+          <div class="eq-kana">きゃ</div>
+          <div class="eq-romaji">KYA</div>
+        </div>
+      </div>
+
+      <!-- Tricky Pairs -->
+      <div class="pairs-preview-row">
+        <span>🔍 <strong>Karakter Mirip Terlatih:</strong></span>
+        <span class="pair-badge"><strong>ぬ</strong> vs <strong>め</strong></span>
+        <span class="pair-badge"><strong>さ</strong> vs <strong>き</strong></span>
+        <span class="pair-badge"><strong>シ</strong> vs <strong>ツ</strong></span>
+        <span class="pair-badge"><strong>ソ</strong> vs <strong>ン</strong></span>
+      </div>
+    </div>
+
+    <!-- 4. 3 Feature Highlights -->
+    <div class="features-row">
+      <div class="feature-item">
+        <div class="feature-icon-title">🔊 Audio Asli</div>
+        <p class="feature-text">
+          Dengarkan artikulasi native lengkap dengan tips fonetik khusus lidah orang Indonesia.
+        </p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon-title">🗂️ Flashcard 3D</div>
+        <p class="feature-text">
+          Metode active recall untuk mengunci ingatan bentuk huruf dan cara baca jangka panjang.
+        </p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon-title">🎯 Kuis Cerdas</div>
+        <p class="feature-text">
+          3 mode kuis (Pilihan Ganda &amp; Ketik) yang otomatis mencatat karakter yang masih salah.
+        </p>
+      </div>
+    </div>
+
+    <!-- 5. Call To Action -->
+    <div class="cta-container">
+      <div class="cta-text-wrap">
+        <h3>Mulai Latihan Sekarang di Browser!</h3>
+        <p>Akses langsung via smartphone atau laptop • Bebas biaya selamanya</p>
+      </div>
+      <div class="cta-btn-mock">
+        <span>Klik Link di Postingan</span>
+        <span>→</span>
+      </div>
+    </div>
+
+    <!-- 6. Footer Meta -->
+    <div class="footer-meta">
+      <span>📱 Web App Statis &amp; Ringan • Tersedia Mode Gelap (Dark Mode)</span>
+      <span>github.com/syarifhidaytullah/hiragana</span>
+    </div>
+  </div>
+</body>
+</html>
