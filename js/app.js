@@ -1,0 +1,1028 @@
+/* =========================================================
+ * app.js — KanaLearn Main Application Controller
+ * Menghubungkan KanaData, KanaAudio, KanaStorage, dan UI
+ * ========================================================= */
+
+(function () {
+  "use strict";
+
+  const KD = window.KanaData;
+  const Storage = window.KanaStorage;
+  const Audio = window.KanaAudio;
+
+  if (!KD || !Storage || !Audio) {
+    console.error("Modul penting (KanaData, KanaStorage, atau KanaAudio) tidak terdeteksi.");
+    return;
+  }
+
+  // App State
+  let currentScript = "hiragana"; // 'hiragana' | 'katakana'
+  let currentFilter = "all";      // 'all' | 'basic' | 'dakuten' | 'yoon' | 'confusables' | 'special'
+  let searchQuery = "";
+
+  // Flashcard State
+  let flashcardDeck = [];
+  let flashcardIndex = 0;
+  let isCardFlipped = false;
+
+  // Quiz State
+  let quizMode = "kana-to-romaji"; // 'kana-to-romaji' | 'romaji-to-kana' | 'typing'
+  let quizQuestions = [];
+  let currentQuizIndex = 0;
+  let quizScore = 0;
+  let quizMissed = [];
+
+  // DOM Elements
+  const navLinks = document.querySelectorAll("[data-nav]");
+  const tabViews = document.querySelectorAll(".tab-view");
+  const themeToggleBtn = document.getElementById("themeToggleBtn");
+  const streakDisplay = document.getElementById("streakDisplay");
+  const heroProgressFill = document.getElementById("heroProgressFill");
+  const heroProgressText = document.getElementById("heroProgressText");
+  const heroHiraCount = document.getElementById("heroHiraCount");
+  const heroKataCount = document.getElementById("heroKataCount");
+
+  // Router / Nav switch
+  function switchTab(tabId) {
+    tabViews.forEach(v => {
+      if (v.id === tabId) {
+        v.classList.add("active");
+      } else {
+        v.classList.remove("active");
+      }
+    });
+
+    navLinks.forEach(link => {
+      if (link.getAttribute("data-nav") === tabId) {
+        link.classList.add("active");
+      } else {
+        link.classList.remove("active");
+      }
+    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // Refresh view specific contents
+    if (tabId === "learnTab") renderKanaSection();
+    if (tabId === "flashcardTab") initFlashcards();
+    if (tabId === "quizTab" && quizQuestions.length === 0) renderQuizSetup();
+    if (tabId === "statsTab") renderStatsView();
+    updateGlobalMetrics();
+  }
+
+  // Bind navigation clicks
+  navLinks.forEach(link => {
+    link.addEventListener("click", e => {
+      e.preventDefault();
+      const target = link.getAttribute("data-nav");
+      if (target) switchTab(target);
+    });
+  });
+
+  // Global metrics update (in hero & header)
+  function updateGlobalMetrics() {
+    const metrics = Storage.getMetrics();
+    if (streakDisplay) streakDisplay.textContent = metrics.streakDays + " Hari";
+
+    if (heroProgressFill && heroProgressText) {
+      const pct = metrics.totalAll > 0 ? Math.round((metrics.totalMastered / metrics.totalAll) * 100) : 0;
+      heroProgressFill.style.transform = `scaleX(${pct / 100})`;
+      heroProgressText.textContent = pct + "% (" + metrics.totalMastered + "/" + metrics.totalAll + ")";
+    }
+
+    if (heroHiraCount) heroHiraCount.textContent = metrics.hiraMastered + "/" + metrics.hiraTotal;
+    if (heroKataCount) heroKataCount.textContent = metrics.kataMastered + "/" + metrics.kataTotal;
+  }
+
+  /* =========================================================
+   * KANA EXPLORER & TABLES
+   * ========================================================= */
+  const scriptSegments = document.querySelectorAll("[data-script]");
+  const filterChips = document.querySelectorAll("[data-filter]");
+  const kanaSearchInput = document.getElementById("kanaSearchInput");
+  const kanaCardsContainer = document.getElementById("kanaCardsContainer");
+  const yoonFormulaContainer = document.getElementById("yoonFormulaContainer");
+  const confusablesContainer = document.getElementById("confusablesContainer");
+  const specialSectionContainer = document.getElementById("specialSectionContainer");
+
+  // Script switch (Hiragana vs Katakana)
+  scriptSegments.forEach(btn => {
+    btn.addEventListener("click", () => {
+      scriptSegments.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentScript = btn.getAttribute("data-script");
+      renderKanaSection();
+    });
+  });
+
+  // Filter chips
+  filterChips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      filterChips.forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      currentFilter = chip.getAttribute("data-filter");
+      renderKanaSection();
+    });
+  });
+
+  // Search input
+  if (kanaSearchInput) {
+    kanaSearchInput.addEventListener("input", e => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      renderKanaSection();
+    });
+  }
+
+  function renderKanaSection() {
+    if (!kanaCardsContainer) return;
+
+    // Tampilkan / sembunyikan banner Yōon & Karakter Mirip berdasarkan filter
+    if (currentFilter === "yoon") {
+      yoonFormulaContainer.style.display = "block";
+      renderYoonBanner();
+    } else {
+      yoonFormulaContainer.style.display = "none";
+    }
+
+    if (currentFilter === "confusables") {
+      confusablesContainer.style.display = "block";
+      kanaCardsContainer.style.display = "none";
+      if (specialSectionContainer) specialSectionContainer.style.display = "none";
+      renderConfusables();
+      return;
+    } else {
+      confusablesContainer.style.display = "none";
+      kanaCardsContainer.style.display = "grid";
+    }
+
+    if (currentFilter === "special") {
+      if (specialSectionContainer) {
+        specialSectionContainer.style.display = "block";
+        renderSpecialCharacters();
+      }
+      kanaCardsContainer.style.display = "none";
+      return;
+    } else {
+      if (specialSectionContainer) specialSectionContainer.style.display = "none";
+    }
+
+    // Ambil data karakter sesuai script
+    let entries = KD.byScript(currentScript);
+
+    // Terapkan kategori filter
+    if (currentFilter === "basic") {
+      entries = entries.filter(e => e.type === "basic");
+    } else if (currentFilter === "dakuten") {
+      entries = entries.filter(e => e.type === "dakuten" || e.type === "handakuten");
+    } else if (currentFilter === "yoon") {
+      entries = entries.filter(e => e.type === "yoon");
+    }
+
+    // Terapkan search query
+    if (searchQuery) {
+      entries = entries.filter(e => {
+        return e.romaji.includes(searchQuery) ||
+               e.kana.includes(searchQuery) ||
+               e.altRomaji.some(alt => alt.includes(searchQuery));
+      });
+    }
+
+    kanaCardsContainer.innerHTML = "";
+
+    if (entries.length === 0) {
+      kanaCardsContainer.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--text-muted);">
+          Tidak ada karakter yang cocok dengan kata kunci "<strong>${escapeHtml(searchQuery)}</strong>".
+        </div>
+      `;
+      return;
+    }
+
+    entries.forEach(entry => {
+      const isM = Storage.isMastered(entry.id);
+      const card = document.createElement("div");
+      card.className = "kana-card" + (isM ? " mastered" : "") + (entry.type === "yoon" ? " is-yoon" : "");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", `${entry.kana}, romaji ${entry.romaji}`);
+
+      card.innerHTML = `
+        <button class="kana-card-audio" title="Dengarkan pelafalan" aria-label="Dengarkan ${entry.kana}">
+          🔊
+        </button>
+        <span class="kana-glyph">${entry.kana}</span>
+        <span class="kana-romaji">${entry.romaji}</span>
+      `;
+
+      // Audio click
+      const audioBtn = card.querySelector(".kana-card-audio");
+      audioBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        audioBtn.classList.add("is-speaking");
+        Audio.speakKana(entry.kana, null, () => audioBtn.classList.remove("is-speaking"));
+      });
+
+      // Card modal click
+      card.addEventListener("click", () => openCharacterModal(entry));
+      card.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openCharacterModal(entry);
+        }
+      });
+
+      kanaCardsContainer.appendChild(card);
+    });
+  }
+
+  function renderYoonBanner() {
+    if (!yoonFormulaContainer) return;
+    const isH = currentScript === "hiragana";
+    const baseSample = isH ? "き" : "キ";
+    const smallSample = isH ? "ゃ" : "ャ";
+    const resSample = isH ? "きゃ" : "キャ";
+
+    yoonFormulaContainer.innerHTML = `
+      <div class="yoon-formula-banner">
+        <div class="yoon-equation">
+          <div class="yoon-eq-unit">
+            <span>${baseSample}</span>
+            <span class="yoon-eq-sub">ki</span>
+          </div>
+          <span class="yoon-eq-op">+</span>
+          <div class="yoon-eq-unit">
+            <span>${smallSample}</span>
+            <span class="yoon-eq-sub">ya (kecil)</span>
+          </div>
+          <span class="yoon-eq-op">=</span>
+          <div class="yoon-eq-unit">
+            <span style="color: var(--accent-red);">${resSample}</span>
+            <span class="yoon-eq-sub" style="color: var(--accent-red); font-weight: 800;">kya</span>
+          </div>
+        </div>
+        <div class="yoon-tip-text">
+          <strong>Kaidah Yōon (Kombinasi):</strong> Gabungan huruf baris "i" (ki, shi, chi, ni, hi, mi, ri, gi, ji, bi, pi) dengan huruf ゃ/ゅ/ょ kecil. Dibaca <strong>satu ketukan penuh</strong>, bukan suku kata terpisah!
+        </div>
+      </div>
+    `;
+  }
+
+  function renderConfusables() {
+    if (!confusablesContainer) return;
+    const pairs = KD.CONFUSABLES[currentScript] || [];
+    confusablesContainer.innerHTML = "";
+
+    const explanations = {
+      "ぬ,め": "ぬ memiliki bulatan/simpul kecil di ujung kanan bawah; sedangkan め tidak bersimpul dan melengkung bebas.",
+      "わ,れ,ね": "Ketiganya memiliki tiang vertikal kiri yang sama. わ melengkung terbuka ke kanan; れ memiliki ekor lancip mencuat; ね berakhir dengan simpul melingkar.",
+      "さ,き": "さ hanya memiliki 1 garis horizontal melintang; sedangkan き memiliki 2 garis horizontal.",
+      "は,ほ": "は tiang kirinya tidak memiliki topi garis atas; sedangkan ほ memiliki garis horizontal penutup di bagian atas.",
+      "い,り": "い kedua goresannya lebih melengkung saling berhadapan; sedangkan り goresan kanannya jauh lebih panjang lurus ke bawah.",
+      "る,ろ": "る memiliki simpul bulat tertutup di ujung ekor bawah; sedangkan ろ terbuka tanpa simpul.",
+      "あ,お": "あ memiliki loop melintang di tengah; sedangkan お memiliki titik petik terpisah di kanan atas.",
+      "ま,も": "ま memiliki 2 garis horizontal di atas tiang; sedangkan も tiang vertikalnya menembus melengkung dari atas seperti kait pancing.",
+      "シ,ツ": "シ (Shi) goresannya mendatar dari kiri bawah ditarik ke kanan atas; sedangkan ツ (Tsu) goresannya lebih tegak dari atas ditarik ke bawah.",
+      "ソ,ン": "ソ (So) goresan pertamanya dari atas ditarik miring ke bawah; sedangkan ン (N) goresan panjangnya meluncur mendatar dari bawah ke atas.",
+      "ク,タ": "タ memiliki goresan horizontal ekstra di bagian dalam; sedangkan ク kosong.",
+      "ウ,ワ": "ウ memiliki titik kepala vertikal di atas; sedangkan ワ rata tanpa titik kepala.",
+      "コ,ユ": "コ memiliki dua sudut horizontal-vertikal; sedangkan ユ memiliki garis dasar melengkung menembus.",
+      "ヌ,ス": "ヌ memiliki simpul silang di ujung bawah; sedangkan ス ujungnya bebas melengkung.",
+      "ナ,メ": "ナ memiliki garis horizontal dan titik silang; sedangkan メ hanya silang dua goresan diagonal.",
+      "ア,マ": "ア sudut kanannya terbuka ke bawah; sedangkan マ garisnya melintang kembali ke kiri bawah."
+    };
+
+    pairs.forEach(pair => {
+      const card = document.createElement("div");
+      card.className = "confusable-pair-card";
+
+      const key = pair.join(",");
+      const note = explanations[key] || "Perhatikan arah tarikan goresan dan ada tidaknya simpul/titik.";
+
+      let glyphsHtml = pair.map(char => {
+        const found = KD.KANA.find(e => e.kana === char && e.script === currentScript);
+        const romaji = found ? found.romaji : "";
+        return `
+          <div class="confusable-item" data-id="${found ? found.id : ''}" title="Dengarkan ${char}">
+            <span class="confusable-glyph">${char}</span>
+            <span class="confusable-romaji">${romaji}</span>
+          </div>
+        `;
+      }).join('<span class="confusable-vs">vs</span>');
+
+      card.innerHTML = `
+        <div class="confusable-glyphs">${glyphsHtml}</div>
+        <div class="confusable-notes">${note}</div>
+      `;
+
+      card.querySelectorAll(".confusable-item").forEach(item => {
+        item.addEventListener("click", () => {
+          const char = item.querySelector(".confusable-glyph").textContent;
+          Audio.speakKana(char);
+          const id = item.getAttribute("data-id");
+          const entry = KD.getById(id);
+          if (entry) openCharacterModal(entry);
+        });
+      });
+
+      confusablesContainer.appendChild(card);
+    });
+  }
+
+  function renderSpecialCharacters() {
+    if (!specialSectionContainer) return;
+    specialSectionContainer.innerHTML = `
+      <div style="margin-bottom: 20px;">
+        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 6px;">Karakter Khusus (Tsu Kecil & Vokal Panjang)</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">Karakter ini tidak dibaca sebagai suku kata mandiri, melainkan mengubah ritme dan panjang ketukan kata.</p>
+      </div>
+    `;
+
+    KD.SPECIAL.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "special-card";
+      card.innerHTML = `
+        <div class="special-glyph-box">${item.kana}</div>
+        <div class="special-info">
+          <h4>${item.name} (${item.script.toUpperCase()})</h4>
+          <p class="special-desc">${item.desc}</p>
+          <div class="special-tip">💡 <strong>Tips:</strong> ${item.tip}</div>
+        </div>
+      `;
+      specialSectionContainer.appendChild(card);
+    });
+  }
+
+  /* =========================================================
+   * CHARACTER MODAL / DRAWER
+   * ========================================================= */
+  const charModal = document.getElementById("charModal");
+  const modalChar = document.getElementById("modalChar");
+  const modalRomaji = document.getElementById("modalRomaji");
+  const modalScriptType = document.getElementById("modalScriptType");
+  const modalAudioBtn = document.getElementById("modalAudioBtn");
+  const modalMasterToggleBtn = document.getElementById("modalMasterToggleBtn");
+  const modalTipContent = document.getElementById("modalTipContent");
+  const modalSimilarList = document.getElementById("modalSimilarList");
+  const modalCloseBtn = document.getElementById("modalCloseBtn");
+
+  let activeModalEntry = null;
+
+  function openCharacterModal(entry) {
+    if (!entry || !charModal) return;
+    activeModalEntry = entry;
+
+    modalChar.textContent = entry.kana;
+    modalRomaji.textContent = entry.romaji + (entry.altRomaji.length > 0 ? " (alt: " + entry.altRomaji.join(", ") + ")" : "");
+    modalScriptType.textContent = `${entry.script.toUpperCase()} • ${entry.type.toUpperCase()}`;
+
+    // Tips Indonesia
+    const tip = KD.tipFor(entry);
+    modalTipContent.textContent = tip || "Pelafalan standar bahasa Jepang. Ucapkan dengan lugas dan jelas.";
+
+    // Update mastered toggle button
+    updateModalMasterButton();
+
+    // Similar characters chips
+    modalSimilarList.innerHTML = "";
+    if (entry.similarTo && entry.similarTo.length > 0) {
+      entry.similarTo.forEach(simId => {
+        const simEntry = KD.getById(simId);
+        if (simEntry) {
+          const chip = document.createElement("button");
+          chip.className = "similar-chip";
+          chip.textContent = `${simEntry.kana} (${simEntry.romaji})`;
+          chip.addEventListener("click", () => openCharacterModal(simEntry));
+          modalSimilarList.appendChild(chip);
+        }
+      });
+      document.getElementById("modalSimilarSection").style.display = "block";
+    } else {
+      document.getElementById("modalSimilarSection").style.display = "none";
+    }
+
+    // Play pronunciation on open
+    Audio.speakKana(entry.kana);
+
+    charModal.classList.add("open");
+    charModal.setAttribute("aria-hidden", "false");
+  }
+
+  function updateModalMasterButton() {
+    if (!activeModalEntry || !modalMasterToggleBtn) return;
+    const isM = Storage.isMastered(activeModalEntry.id);
+    if (isM) {
+      modalMasterToggleBtn.textContent = "✓ Sudah Dikuasai";
+      modalMasterToggleBtn.className = "btn btn-secondary";
+      modalMasterToggleBtn.style.color = "var(--accent-green)";
+    } else {
+      modalMasterToggleBtn.textContent = "+ Tandai Dikuasai";
+      modalMasterToggleBtn.className = "btn btn-primary";
+      modalMasterToggleBtn.style.color = "#fff";
+    }
+  }
+
+  if (modalAudioBtn) {
+    modalAudioBtn.addEventListener("click", () => {
+      if (activeModalEntry) {
+        modalAudioBtn.classList.add("is-speaking");
+        Audio.speakKana(activeModalEntry.kana, null, () => modalAudioBtn.classList.remove("is-speaking"));
+      }
+    });
+  }
+
+  if (modalMasterToggleBtn) {
+    modalMasterToggleBtn.addEventListener("click", () => {
+      if (activeModalEntry) {
+        Storage.toggleMastered(activeModalEntry.id);
+        updateModalMasterButton();
+        renderKanaSection();
+        updateGlobalMetrics();
+      }
+    });
+  }
+
+  function closeModal() {
+    if (charModal) {
+      charModal.classList.remove("open");
+      charModal.setAttribute("aria-hidden", "true");
+    }
+    activeModalEntry = null;
+  }
+
+  if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeModal);
+  if (charModal) {
+    charModal.addEventListener("click", e => {
+      if (e.target === charModal) closeModal();
+    });
+  }
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && charModal && charModal.classList.contains("open")) {
+      closeModal();
+    }
+  });
+
+  /* =========================================================
+   * FLASHCARD ENGINE
+   * ========================================================= */
+  const flashcardFlipper = document.getElementById("flashcardFlipper");
+  const flashcardFrontChar = document.getElementById("flashcardFrontChar");
+  const flashcardBackRomaji = document.getElementById("flashcardBackRomaji");
+  const flashcardBackKana = document.getElementById("flashcardBackKana");
+  const flashcardBackType = document.getElementById("flashcardBackType");
+  const flashcardBackTip = document.getElementById("flashcardBackTip");
+  const flashcardBackAudioBtn = document.getElementById("flashcardBackAudioBtn");
+  const flashcardCounter = document.getElementById("flashcardCounter");
+  const flashcardProgressBar = document.getElementById("flashcardProgressBar");
+  const flashcardDeckBtns = document.querySelectorAll("[data-deck]");
+  const btnFlashUnknown = document.getElementById("btnFlashUnknown");
+  const btnFlashKnown = document.getElementById("btnFlashKnown");
+
+  let activeDeckType = "hira-basic";
+
+  flashcardDeckBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      flashcardDeckBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeDeckType = btn.getAttribute("data-deck");
+      initFlashcards();
+    });
+  });
+
+  function initFlashcards() {
+    let pool = [];
+    if (activeDeckType === "hira-basic") {
+      pool = KD.byScript("hiragana", { type: "basic" });
+    } else if (activeDeckType === "kata-basic") {
+      pool = KD.byScript("katakana", { type: "basic" });
+    } else if (activeDeckType === "dakuten") {
+      pool = KD.KANA.filter(e => e.type === "dakuten" || e.type === "handakuten");
+    } else if (activeDeckType === "yoon") {
+      pool = KD.KANA.filter(e => e.type === "yoon");
+    } else if (activeDeckType === "missed") {
+      const metrics = Storage.getMetrics();
+      pool = metrics.missedIds.map(id => KD.getById(id)).filter(Boolean);
+      if (pool.length === 0) {
+        alert("Hebat! Belum ada karakter yang perlu diulang (antrean salah kosong). Memuat Hiragana Dasar.");
+        pool = KD.byScript("hiragana", { type: "basic" });
+      }
+    }
+
+    flashcardDeck = KD.shuffle(pool);
+    flashcardIndex = 0;
+    isCardFlipped = false;
+    renderCurrentFlashcard();
+  }
+
+  function renderCurrentFlashcard() {
+    if (!flashcardFrontChar || flashcardDeck.length === 0) return;
+
+    if (flashcardIndex >= flashcardDeck.length) {
+      Audio.playSuccessFanfare();
+      flashcardCounter.textContent = "Sesi Selesai!";
+      flashcardFrontChar.textContent = "🎉";
+      document.getElementById("flashcardFrontHint").textContent = "Anda telah menyelesaikan deck ini. Klik tombol di bawah untuk mengulang.";
+      if (flashcardFlipper) flashcardFlipper.classList.remove("flipped");
+      isCardFlipped = false;
+      return;
+    }
+
+    const current = flashcardDeck[flashcardIndex];
+    if (flashcardCounter) {
+      flashcardCounter.textContent = `Kartu ${flashcardIndex + 1} dari ${flashcardDeck.length}`;
+    }
+    if (flashcardProgressBar) {
+      const pct = Math.round(((flashcardIndex) / flashcardDeck.length) * 100);
+      flashcardProgressBar.style.transform = `scaleX(${pct / 100})`;
+    }
+
+    // Reset flip
+    if (flashcardFlipper) flashcardFlipper.classList.remove("flipped");
+    isCardFlipped = false;
+
+    flashcardFrontChar.textContent = current.kana;
+    flashcardBackRomaji.textContent = current.romaji;
+    flashcardBackKana.textContent = current.kana;
+    flashcardBackType.textContent = `${current.script} • ${current.type}`;
+    const tip = KD.tipFor(current);
+    flashcardBackTip.textContent = tip ? "💡 " + tip : "Pelafalan standar bahasa Jepang.";
+  }
+
+  function toggleCardFlip() {
+    if (flashcardIndex >= flashcardDeck.length) {
+      initFlashcards();
+      return;
+    }
+    isCardFlipped = !isCardFlipped;
+    Audio.playCardFlipSound();
+    if (flashcardFlipper) {
+      flashcardFlipper.classList.toggle("flipped", isCardFlipped);
+    }
+    if (isCardFlipped && flashcardDeck[flashcardIndex]) {
+      Audio.speakKana(flashcardDeck[flashcardIndex].kana);
+    }
+  }
+
+  if (flashcardFlipper) {
+    flashcardFlipper.addEventListener("click", toggleCardFlip);
+  }
+
+  if (flashcardBackAudioBtn) {
+    flashcardBackAudioBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      const current = flashcardDeck[flashcardIndex];
+      if (current) Audio.speakKana(current.kana);
+    });
+  }
+
+  if (btnFlashUnknown) {
+    btnFlashUnknown.addEventListener("click", () => {
+      if (flashcardIndex >= flashcardDeck.length) return;
+      const current = flashcardDeck[flashcardIndex];
+      Storage.markCardReview(current.id, false);
+      flashcardIndex++;
+      renderCurrentFlashcard();
+      updateGlobalMetrics();
+    });
+  }
+
+  if (btnFlashKnown) {
+    btnFlashKnown.addEventListener("click", () => {
+      if (flashcardIndex >= flashcardDeck.length) return;
+      const current = flashcardDeck[flashcardIndex];
+      Storage.markCardReview(current.id, true);
+      flashcardIndex++;
+      renderCurrentFlashcard();
+      updateGlobalMetrics();
+    });
+  }
+
+  // Keyboard shortcut Flashcards
+  document.addEventListener("keydown", e => {
+    const flashTab = document.getElementById("flashcardTab");
+    if (!flashTab || !flashTab.classList.contains("active")) return;
+    if (charModal && charModal.classList.contains("open")) return;
+
+    if (e.code === "Space") {
+      e.preventDefault();
+      toggleCardFlip();
+    } else if (e.key === "1") {
+      e.preventDefault();
+      if (btnFlashUnknown) btnFlashUnknown.click();
+    } else if (e.key === "2") {
+      e.preventDefault();
+      if (btnFlashKnown) btnFlashKnown.click();
+    } else if (e.key === "a" || e.key === "A") {
+      e.preventDefault();
+      if (flashcardDeck[flashcardIndex]) Audio.speakKana(flashcardDeck[flashcardIndex].kana);
+    }
+  });
+
+  /* =========================================================
+   * QUIZ ENGINE
+   * ========================================================= */
+  const quizSetupCard = document.getElementById("quizSetupCard");
+  const quizActiveCard = document.getElementById("quizActiveCard");
+  const quizResultCard = document.getElementById("quizResultCard");
+  const quizModeOptions = document.querySelectorAll(".quiz-mode-option");
+  const quizScopeSelect = document.getElementById("quizScopeSelect");
+  const startQuizBtn = document.getElementById("startQuizBtn");
+
+  const quizProgressBar = document.getElementById("quizProgressBar");
+  const quizProgressText = document.getElementById("quizProgressText");
+  const quizPromptChar = document.getElementById("quizPromptChar");
+  const quizPromptCategory = document.getElementById("quizPromptCategory");
+  const quizOptionsGrid = document.getElementById("quizOptionsGrid");
+  const quizTypingBox = document.getElementById("quizTypingBox");
+  const quizTextInput = document.getElementById("quizTextInput");
+  const quizSubmitTypeBtn = document.getElementById("quizSubmitTypeBtn");
+  const quizFeedbackBanner = document.getElementById("quizFeedbackBanner");
+
+  quizModeOptions.forEach(opt => {
+    opt.addEventListener("click", () => {
+      quizModeOptions.forEach(o => o.classList.remove("active"));
+      opt.classList.add("active");
+      quizMode = opt.getAttribute("data-mode");
+    });
+  });
+
+  function renderQuizSetup() {
+    if (quizSetupCard) quizSetupCard.style.display = "block";
+    if (quizActiveCard) quizActiveCard.style.display = "none";
+    if (quizResultCard) quizResultCard.style.display = "none";
+  }
+
+  if (startQuizBtn) {
+    startQuizBtn.addEventListener("click", () => {
+      const scope = quizScopeSelect ? quizScopeSelect.value : "hira-basic";
+      let pool = [];
+
+      if (scope === "hira-basic") {
+        pool = KD.byScript("hiragana", { type: "basic" });
+      } else if (scope === "kata-basic") {
+        pool = KD.byScript("katakana", { type: "basic" });
+      } else if (scope === "dakuten") {
+        pool = KD.KANA.filter(e => e.type === "dakuten" || e.type === "handakuten");
+      } else if (scope === "yoon") {
+        pool = KD.KANA.filter(e => e.type === "yoon");
+      } else if (scope === "all-hiragana") {
+        pool = KD.byScript("hiragana");
+      } else if (scope === "all-katakana") {
+        pool = KD.byScript("katakana");
+      } else if (scope === "missed") {
+        const metrics = Storage.getMetrics();
+        pool = metrics.missedIds.map(id => KD.getById(id)).filter(Boolean);
+        if (pool.length === 0) {
+          alert("Belum ada riwayat karakter salah. Mengambil soal Hiragana & Katakana umum.");
+          pool = KD.KANA.filter(e => e.type === "basic");
+        }
+      }
+
+      // Filter yang valid untuk quiz
+      pool = pool.filter(e => e.quiz);
+      if (quizMode === "romaji-to-kana") {
+        pool = pool.filter(e => e.quizRomajiToKana);
+      }
+
+      const shuffledPool = KD.shuffle(pool).slice(0, 10);
+      quizQuestions = shuffledPool.map(entry => {
+        return KD.buildQuestion(entry, quizMode);
+      });
+
+      currentQuizIndex = 0;
+      quizScore = 0;
+      quizMissed = [];
+
+      if (quizSetupCard) quizSetupCard.style.display = "none";
+      if (quizActiveCard) quizActiveCard.style.display = "block";
+      if (quizResultCard) quizResultCard.style.display = "none";
+
+      renderCurrentQuestion();
+    });
+  }
+
+  function renderCurrentQuestion() {
+    if (currentQuizIndex >= quizQuestions.length) {
+      finishQuiz();
+      return;
+    }
+
+    const q = quizQuestions[currentQuizIndex];
+    const entry = KD.getById(q.entryId);
+
+    // Update progress
+    quizProgressText.textContent = `Soal ${currentQuizIndex + 1} / ${quizQuestions.length}`;
+    quizProgressBar.style.transform = `scaleX(${currentQuizIndex / quizQuestions.length})`;
+
+    // Setup prompt
+    quizPromptCategory.textContent = `${entry.script.toUpperCase()} • ${entry.type.toUpperCase()}`;
+    quizPromptChar.textContent = q.prompt;
+
+    if (q.mode === "romaji-to-kana") {
+      quizPromptChar.className = "prompt-character romaji-prompt";
+    } else {
+      quizPromptChar.className = "prompt-character";
+    }
+
+    quizFeedbackBanner.className = "quiz-feedback-banner";
+    quizFeedbackBanner.innerHTML = "";
+
+    // Pilihan ganda vs Ketik
+    if (q.mode === "typing") {
+      quizOptionsGrid.style.display = "none";
+      quizTypingBox.style.display = "flex";
+      quizTextInput.value = "";
+      quizTextInput.disabled = false;
+      quizSubmitTypeBtn.disabled = false;
+      setTimeout(() => quizTextInput.focus(), 100);
+    } else {
+      quizOptionsGrid.style.display = "grid";
+      quizTypingBox.style.display = "none";
+      quizOptionsGrid.innerHTML = "";
+
+      q.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "quiz-option-btn";
+        btn.textContent = opt.label;
+        btn.addEventListener("click", () => handleOptionSelect(btn, opt.id, q.answerId));
+        quizOptionsGrid.appendChild(btn);
+      });
+    }
+
+    // Putar suara jika mode Kana -> Romaji
+    if (q.mode === "kana-to-romaji") {
+      Audio.speakKana(entry.kana);
+    }
+  }
+
+  function handleOptionSelect(selectedBtn, chosenId, correctId) {
+    const q = quizQuestions[currentQuizIndex];
+    const isCorrect = chosenId === correctId;
+    const allBtns = quizOptionsGrid.querySelectorAll(".quiz-option-btn");
+    allBtns.forEach(b => b.disabled = true);
+
+    processAnswerOutcome(isCorrect, correctId, selectedBtn);
+  }
+
+  function handleTypingSubmit() {
+    const q = quizQuestions[currentQuizIndex];
+    const entry = KD.getById(q.entryId);
+    const typed = quizTextInput.value.trim();
+    if (!typed) return;
+
+    quizTextInput.disabled = true;
+    quizSubmitTypeBtn.disabled = true;
+
+    const isCorrect = KD.matchRomaji(entry, typed);
+    processAnswerOutcome(isCorrect, q.answerId);
+  }
+
+  if (quizSubmitTypeBtn) quizSubmitTypeBtn.addEventListener("click", handleTypingSubmit);
+  if (quizTextInput) {
+    quizTextInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleTypingSubmit();
+      }
+    });
+  }
+
+  function processAnswerOutcome(isCorrect, correctId, selectedBtn) {
+    const q = quizQuestions[currentQuizIndex];
+    const entry = KD.getById(q.entryId);
+
+    Storage.recordQuizAnswer(entry.id, isCorrect);
+
+    if (isCorrect) {
+      quizScore++;
+      Audio.playCorrectSound();
+      if (selectedBtn) selectedBtn.classList.add("correct");
+
+      quizFeedbackBanner.className = "quiz-feedback-banner show correct-fb";
+      quizFeedbackBanner.innerHTML = `
+        <strong>✓ Benar sekali!</strong> ${entry.kana} = <em>${entry.romaji}</em>
+      `;
+    } else {
+      Audio.playWrongSound();
+      quizMissed.push(entry);
+      if (selectedBtn) selectedBtn.classList.add("wrong");
+
+      // Highlight correct button
+      if (quizOptionsGrid) {
+        const btns = quizOptionsGrid.querySelectorAll(".quiz-option-btn");
+        btns.forEach(b => {
+          if (b.textContent === (q.mode === "romaji-to-kana" ? entry.kana : entry.romaji)) {
+            b.classList.add("correct");
+          }
+        });
+      }
+
+      const tip = KD.tipFor(entry);
+      quizFeedbackBanner.className = "quiz-feedback-banner show wrong-fb";
+      quizFeedbackBanner.innerHTML = `
+        <strong>✗ Kurang tepat.</strong> Jawaban benar: <strong>${entry.kana} = ${entry.romaji}</strong>.
+        ${tip ? `<div style="margin-top: 4px; font-size: 0.85rem;">💡 ${tip}</div>` : ""}
+      `;
+    }
+
+    updateGlobalMetrics();
+
+    // Auto lanjut ke soal berikutnya setelah delay singkat
+    setTimeout(() => {
+      currentQuizIndex++;
+      renderCurrentQuestion();
+    }, isCorrect ? 1000 : 2200);
+  }
+
+  function finishQuiz() {
+    if (quizActiveCard) quizActiveCard.style.display = "none";
+    if (quizResultCard) quizResultCard.style.display = "block";
+
+    Audio.playSuccessFanfare();
+    Storage.saveQuizSession(quizScore, quizQuestions.length, quizMode);
+
+    const pct = Math.round((quizScore / quizQuestions.length) * 100);
+    document.getElementById("quizResultScore").textContent = `${quizScore} / ${quizQuestions.length}`;
+    document.getElementById("quizResultPct").textContent = `${pct}% Akurasi`;
+
+    const summaryEl = document.getElementById("quizResultSummary");
+    if (pct >= 80) {
+      summaryEl.textContent = "Luar biasa! Hafalan Kana Anda semakin mantap dan refleks membaca Anda sudah sangat baik.";
+    } else if (pct >= 50) {
+      summaryEl.textContent = "Bagus! Terus latih karakter yang masih ragu, terutama perbedaan goresan dan vokal.";
+    } else {
+      summaryEl.textContent = "Jangan menyerah! Buka kembali menu Flashcard dan Tabel untuk memantapkan karakter yang keliru.";
+    }
+
+    const missedSection = document.getElementById("quizResultMissedSection");
+    const missedList = document.getElementById("quizResultMissedList");
+    if (quizMissed.length > 0) {
+      missedSection.style.display = "block";
+      missedList.innerHTML = "";
+      quizMissed.forEach(m => {
+        const item = document.createElement("div");
+        item.className = "similar-chip";
+        item.textContent = `${m.kana} (${m.romaji})`;
+        item.addEventListener("click", () => openCharacterModal(m));
+        missedList.appendChild(item);
+      });
+    } else {
+      missedSection.style.display = "none";
+    }
+  }
+
+  const retryQuizBtn = document.getElementById("retryQuizBtn");
+  const newQuizBtn = document.getElementById("newQuizBtn");
+
+  if (retryQuizBtn) {
+    retryQuizBtn.addEventListener("click", () => {
+      if (startQuizBtn) startQuizBtn.click();
+    });
+  }
+
+  if (newQuizBtn) {
+    newQuizBtn.addEventListener("click", renderQuizSetup);
+  }
+
+  /* =========================================================
+   * STATS & PROGRESS VIEW
+   * ========================================================= */
+  function renderStatsView() {
+    const metrics = Storage.getMetrics();
+
+    document.getElementById("statTotalMastered").textContent = metrics.totalMastered;
+    document.getElementById("statTotalAll").textContent = metrics.totalAll;
+    document.getElementById("statQuizAcc").textContent = metrics.quizAccuracy + "%";
+    document.getElementById("statStreak").textContent = metrics.streakDays + " Hari";
+    document.getElementById("statHiraMastered").textContent = `${metrics.hiraMastered} / ${metrics.hiraTotal}`;
+    document.getElementById("statKataMastered").textContent = `${metrics.kataMastered} / ${metrics.kataTotal}`;
+    document.getElementById("statYoonMastered").textContent = `${metrics.yoonMastered} / ${metrics.yoonTotal}`;
+
+    // Render missed items list
+    const missedGrid = document.getElementById("statMissedGrid");
+    const missedEmptyNotice = document.getElementById("statMissedEmpty");
+    if (missedGrid && missedEmptyNotice) {
+      missedGrid.innerHTML = "";
+      if (metrics.missedIds.length === 0) {
+        missedEmptyNotice.style.display = "block";
+      } else {
+        missedEmptyNotice.style.display = "none";
+        metrics.missedIds.forEach(id => {
+          const entry = KD.getById(id);
+          if (entry) {
+            const card = document.createElement("div");
+            card.className = "kana-card";
+            card.innerHTML = `
+              <span class="kana-glyph">${entry.kana}</span>
+              <span class="kana-romaji">${entry.romaji}</span>
+            `;
+            card.addEventListener("click", () => openCharacterModal(entry));
+            missedGrid.appendChild(card);
+          }
+        });
+      }
+    }
+
+    // Render quiz history list
+    const historyList = document.getElementById("quizHistoryList");
+    if (historyList) {
+      const state = Storage.getState();
+      const history = state.quizStats.history || [];
+      historyList.innerHTML = "";
+      if (history.length === 0) {
+        historyList.innerHTML = `<li style="color: var(--text-muted); font-size: 0.88rem;">Belum ada sesi kuis yang diselesaikan.</li>`;
+      } else {
+        history.forEach(item => {
+          const li = document.createElement("li");
+          li.style.padding = "8px 0";
+          li.style.borderBottom = "1px solid var(--border-subtle)";
+          li.style.display = "flex";
+          li.style.justifyContent = "space-between";
+          li.style.fontSize = "0.88rem";
+
+          const dateStr = new Date(item.date).toLocaleDateString("id-ID", {
+            day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+          });
+          const pct = Math.round((item.score / item.total) * 100);
+
+          li.innerHTML = `
+            <span>${dateStr} (${item.mode})</span>
+            <strong>${item.score}/${item.total} (${pct}%)</strong>
+          `;
+          historyList.appendChild(li);
+        });
+      }
+    }
+  }
+
+  // Reset Progress Button
+  const resetProgressBtn = document.getElementById("resetProgressBtn");
+  if (resetProgressBtn) {
+    resetProgressBtn.addEventListener("click", () => {
+      if (confirm("Apakah Anda yakin ingin mereset seluruh progres belajar dan riwayat kuis? Tindakan ini tidak dapat dibatalkan.")) {
+        Storage.resetAll();
+        updateGlobalMetrics();
+        renderStatsView();
+        renderKanaSection();
+        alert("Progres telah berhasil direset.");
+      }
+    });
+  }
+
+  // Theme toggle
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", newTheme);
+      Storage.saveSetting("theme", newTheme);
+      themeToggleBtn.textContent = newTheme === "dark" ? "☀️" : "🌙";
+    });
+
+    // Initialize theme from saved state
+    const savedTheme = Storage.getState().settings.theme || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    themeToggleBtn.textContent = savedTheme === "dark" ? "☀️" : "🌙";
+  }
+
+  // Quick Action Buttons on Home
+  const heroStartBtn = document.getElementById("heroStartBtn");
+  const heroQuizBtn = document.getElementById("heroQuizBtn");
+  const ctaYoonBtn = document.getElementById("ctaYoonBtn");
+  const ctaConfusableBtn = document.getElementById("ctaConfusableBtn");
+
+  if (heroStartBtn) {
+    heroStartBtn.addEventListener("click", () => switchTab("learnTab"));
+  }
+  if (heroQuizBtn) {
+    heroQuizBtn.addEventListener("click", () => switchTab("quizTab"));
+  }
+  if (ctaYoonBtn) {
+    ctaYoonBtn.addEventListener("click", () => {
+      switchTab("learnTab");
+      const chipYoon = document.querySelector('[data-filter="yoon"]');
+      if (chipYoon) chipYoon.click();
+    });
+  }
+  if (ctaConfusableBtn) {
+    ctaConfusableBtn.addEventListener("click", () => {
+      switchTab("learnTab");
+      const chipConf = document.querySelector('[data-filter="confusables"]');
+      if (chipConf) chipConf.click();
+    });
+  }
+
+  // Helper sanitasi HTML
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  // Initial load
+  updateGlobalMetrics();
+  renderKanaSection();
+})();

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KanaLearn — Media pembelajaran interaktif Hiragana & Katakana dasar serta kombinasi Yōon (kya, kyu, kyo) untuk penutur Indonesia.">
+  <title>KanaLearn — Belajar Hiragana & Katakana Interaktif</title>
+
+  <!-- Google Fonts: Zen Kaku Gothic New & Noto Sans JP -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Site Header -->
+  <header class="site-header" role="banner">
+    <div class="container header-inner">
+      <div class="brand-logo">
+        <span class="brand-badge">か</span>
+        <span>KanaLearn<span class="brand-sub">かなラーン</span></span>
+      </div>
+
+      <!-- Desktop Nav -->
+      <nav class="desktop-nav" aria-label="Navigasi Utama">
+        <a href="#home" class="nav-link active" data-nav="homeTab">🏠 Beranda</a>
+        <a href="#learn" class="nav-link" data-nav="learnTab">🈸 Tabel Kana</a>
+        <a href="#flashcard" class="nav-link" data-nav="flashcardTab">🗂️ Flashcard</a>
+        <a href="#quiz" class="nav-link" data-nav="quizTab">🎯 Kuis</a>
+        <a href="#stats" class="nav-link" data-nav="statsTab">📊 Statistik</a>
+      </nav>
+
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <div class="streak-pill" title="Hari berturut-turut belajar">
+          <span>🔥</span>
+          <span id="streakDisplay">1 Hari</span>
+        </div>
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Ganti tema gelap/terang" title="Ganti Tema">
+          🌙
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container" role="main">
+
+    <!-- =========================================================
+         TAB 1: BERANDA / DASHBOARD (homeTab)
+         ========================================================= -->
+    <section id="homeTab" class="tab-view active" aria-labelledby="homeHeadline">
+      <!-- Hero Section -->
+      <div class="hero-card">
+        <div class="hero-content">
+          <h1 id="homeHeadline" class="hero-headline">
+            Belajar Hiragana & Katakana dengan Cara Terstruktur
+          </h1>
+          <p class="hero-subheadline">
+            Kuasai alfabet Jepang dari huruf dasar, perubahan bunyi Dakuten, hingga kombinasi <strong>Yōon (きゃ, きゅ, きょ)</strong> melalui alur: <em>Lihat → Dengar → Ingat → Uji</em>.
+          </p>
+          <div class="hero-actions">
+            <button id="heroStartBtn" class="btn btn-primary">
+              Mulai Belajar Sekarang →
+            </button>
+            <button id="heroQuizBtn" class="btn btn-secondary">
+              Uji Kemampuan (Kuis)
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Progress Panel -->
+        <div class="hero-stats-panel" aria-label="Progres Belajar Anda">
+          <div class="progress-header">
+            <span class="progress-label">Total Dikuasai</span>
+            <span id="heroProgressText" class="progress-number">0% (0/224)</span>
+          </div>
+          <div class="progress-bar-track">
+            <div id="heroProgressFill" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+          <div class="mini-stats-grid">
+            <div class="mini-stat-item">
+              <div id="heroHiraCount" class="mini-stat-val">0/104</div>
+              <div class="mini-stat-lbl">Hiragana</div>
+            </div>
+            <div class="mini-stat-item">
+              <div id="heroKataCount" class="mini-stat-val">0/120</div>
+              <div class="mini-stat-lbl">Katakana</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fitur Utama Section -->
+      <h2 style="font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 16px;">
+        Keunggulan Metode Belajar
+      </h2>
+      <div class="dashboard-grid">
+        <div class="feature-box">
+          <div>
+            <h3 class="feature-title"><span class="feature-icon">🔊</span> Audio & Tips Fonetik</h3>
+            <p class="feature-desc">
+              Dilengkapi pelafalan suara penutur asli (Web Speech API) serta panduan artikulasi vokal dan konsonan khusus penutur bahasa Indonesia.
+            </p>
+          </div>
+          <button class="btn btn-ghost" onclick="document.querySelector('[data-nav=\'learnTab\']').click()" style="justify-content: flex-start; padding-left: 0;">
+            Buka Tabel & Dengarkan →
+          </button>
+        </div>
+
+        <div class="feature-box">
+          <div>
+            <h3 class="feature-title"><span class="feature-icon">✨</span> Fokus Kombinasi Yōon</h3>
+            <p class="feature-desc">
+              Kombinasi huruf baris-I dengan ゃ, ゅ, ょ kecil (seperti <em>kya, kyu, kyo, sha, cha</em>) dijelaskan dengan visualisasi struktur 1-ketukan.
+            </p>
+          </div>
+          <button id="ctaYoonBtn" class="btn btn-ghost" style="justify-content: flex-start; padding-left: 0;">
+            Pelajari Materi Yōon →
+          </button>
+        </div>
+
+        <div class="feature-box">
+          <div>
+            <h3 class="feature-title"><span class="feature-icon">🔍</span> Pembeda Karakter Mirip</h3>
+            <p class="feature-desc">
+              Jangan terkecoh lagi dengan huruf yang tampak serupa seperti <strong>ぬ vs め</strong>, <strong>さ vs き</strong>, atau <strong>シ vs ツ</strong>.
+            </p>
+          </div>
+          <button id="ctaConfusableBtn" class="btn btn-ghost" style="justify-content: flex-start; padding-left: 0;">
+            Latihan Karakter Mirip →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         TAB 2: TABEL & MATERI KANA (learnTab)
+         ========================================================= -->
+    <section id="learnTab" class="tab-view" aria-labelledby="learnHeadline">
+      <div style="margin-bottom: 24px;">
+        <h2 id="learnHeadline" style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px;">
+          Eksplorasi Karakter Kana
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Klik kartu karakter untuk mendengarkan pelafalan, tips vokal penutur Indonesia, dan melihat karakter mirip.
+        </p>
+      </div>
+
+      <!-- Controls & Filter Bar -->
+      <div class="explorer-controls">
+        <!-- Segmented: Hiragana vs Katakana -->
+        <div class="script-segmented-control" role="group" aria-label="Pilih Jenis Huruf">
+          <button class="segment-btn active" data-script="hiragana">Hiragana (ひらがな)</button>
+          <button class="segment-btn" data-script="katakana">Katakana (カタカナ)</button>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="filter-chips" role="group" aria-label="Kategori Materi">
+          <button class="chip active" data-filter="all">Semua</button>
+          <button class="chip" data-filter="basic">Seion (Dasar)</button>
+          <button class="chip" data-filter="dakuten">Dakuten & Handakuten</button>
+          <button class="chip" data-filter="yoon">Yōon (Kombinasi)</button>
+          <button class="chip" data-filter="confusables">Karakter Mirip</button>
+          <button class="chip" data-filter="special">Karakter Khusus (っ/ー)</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="search" id="kanaSearchInput" class="search-input" placeholder="Cari romaji atau kana..." aria-label="Cari karakter Kana">
+        </div>
+      </div>
+
+      <!-- Dynamic Yoon Banner (rendered when Yoon filter active) -->
+      <div id="yoonFormulaContainer" style="display: none;"></div>
+
+      <!-- Characters Grid -->
+      <div id="kanaCardsContainer" class="kana-grid" aria-live="polite"></div>
+
+      <!-- Confusables Container (rendered when confusables filter active) -->
+      <div id="confusablesContainer" style="display: none;"></div>
+
+      <!-- Special Characters Container (rendered when special filter active) -->
+      <div id="specialSectionContainer" style="display: none;"></div>
+    </section>
+
+    <!-- =========================================================
+         TAB 3: FLASHCARD (flashcardTab)
+         ========================================================= -->
+    <section id="flashcardTab" class="tab-view" aria-labelledby="flashcardHeadline">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h2 id="flashcardHeadline" style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px;">
+          Latihan Flashcard Interaktif
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Uji ingatan aktif (Active Recall). Tebak cara bacanya sebelum membalik kartu.
+        </p>
+      </div>
+
+      <div class="flashcard-stage">
+        <!-- Deck Selector -->
+        <div class="flashcard-deck-selector" role="group" aria-label="Pilih Deck Flashcard">
+          <button class="chip active" data-deck="hira-basic">Hiragana Dasar</button>
+          <button class="chip" data-deck="kata-basic">Katakana Dasar</button>
+          <button class="chip" data-deck="dakuten">Dakuten</button>
+          <button class="chip" data-deck="yoon">Yōon (Kombinasi)</button>
+          <button class="chip" data-deck="missed">⚠️ Perlu Diulang</button>
+        </div>
+
+        <!-- Progress bar card -->
+        <div style="width: 100%; margin-bottom: 8px;">
+          <div class="progress-bar-track">
+            <div id="flashcardProgressBar" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+        <div id="flashcardCounter" class="flashcard-counter">Kartu 1 dari 46</div>
+
+        <!-- 3D Flipping Card -->
+        <div class="card-perspective-container">
+          <div id="flashcardFlipper" class="flashcard-flipper">
+            <!-- Front Face -->
+            <div class="flashcard-face flashcard-front">
+              <span id="flashcardFrontChar" class="card-kana-large">あ</span>
+              <p id="flashcardFrontHint" class="card-hint-text">Klik kartu atau tekan [Spasi] untuk membalik</p>
+            </div>
+
+            <!-- Back Face -->
+            <div class="flashcard-face flashcard-back">
+              <div id="flashcardBackRomaji" class="card-romaji-large">A</div>
+              <div id="flashcardBackKana" style="font-family: var(--font-kana); font-size: 1.8rem; margin-bottom: 4px;">あ</div>
+              <span id="flashcardBackType" class="card-type-tag">HIRAGANA • BASIC</span>
+              <button id="flashcardBackAudioBtn" class="btn btn-secondary" style="padding: 6px 14px; margin-bottom: 8px;">
+                🔊 Dengarkan
+              </button>
+              <div id="flashcardBackTip" class="card-tip-bubble">
+                💡 Pelafalan vokal "a" terbuka jernih.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Controls -->
+        <div class="flashcard-controls">
+          <button id="btnFlashUnknown" class="btn btn-flash-unknown">
+            ❌ Belum Tahu (1)
+          </button>
+          <button id="btnFlashKnown" class="btn btn-flash-known">
+            ✓ Sudah Tahu (2)
+          </button>
+        </div>
+
+        <!-- Keyboard Guide -->
+        <div class="shortcut-guide">
+          <span><kbd class="kbd-badge">Spasi</kbd> Balik</span>
+          <span><kbd class="kbd-badge">1</kbd> Belum Tahu</span>
+          <span><kbd class="kbd-badge">2</kbd> Sudah Tahu</span>
+          <span><kbd class="kbd-badge">A</kbd> Suara</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         TAB 4: KUIS INTERAKTIF (quizTab)
+         ========================================================= -->
+    <section id="quizTab" class="tab-view" aria-labelledby="quizHeadline">
+      <div class="quiz-container">
+        <!-- 1. Quiz Setup Card -->
+        <div id="quizSetupCard" class="quiz-setup-card">
+          <h2 id="quizHeadline" style="font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; text-align: center;">
+            Kuis Uji Kemampuan
+          </h2>
+          <p style="color: var(--text-secondary); text-align: center; margin-bottom: 24px; font-size: 0.95rem;">
+            Pilih mode kuis dan cakupan materi yang ingin Anda latih (10 soal acak).
+          </p>
+
+          <label style="display: block; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px;">
+            1. Pilih Format Kuis:
+          </label>
+          <div class="quiz-mode-select-grid">
+            <div class="quiz-mode-option active" data-mode="kana-to-romaji">
+              <div class="quiz-mode-title">Kana → Romaji</div>
+              <div class="quiz-mode-sub">Lihat huruf, pilih romaji</div>
+            </div>
+            <div class="quiz-mode-option" data-mode="romaji-to-kana">
+              <div class="quiz-mode-title">Romaji → Kana</div>
+              <div class="quiz-mode-sub">Lihat romaji, pilih huruf</div>
+            </div>
+            <div class="quiz-mode-option" data-mode="typing">
+              <div class="quiz-mode-title">Ketik Romaji</div>
+              <div class="quiz-mode-sub">Ketik manual bacaan</div>
+            </div>
+          </div>
+
+          <label for="quizScopeSelect" style="display: block; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px;">
+            2. Pilih Cakupan Materi:
+          </label>
+          <select id="quizScopeSelect" style="width: 100%; padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-medium); background: var(--bg-surface); font-size: 0.95rem; margin-bottom: 24px;">
+            <option value="hira-basic">Hiragana Dasar (Seion 46 karakter)</option>
+            <option value="kata-basic">Katakana Dasar (Seion 46 karakter)</option>
+            <option value="dakuten">Dakuten & Handakuten (Ga, Za, Da, Ba, Pa)</option>
+            <option value="yoon">Yōon (Kombinasi Kya, Sha, Cha, dll.)</option>
+            <option value="all-hiragana">Seluruh Hiragana Lengkap</option>
+            <option value="all-katakana">Seluruh Katakana Lengkap</option>
+            <option value="missed">⚠️ Karakter yang Pernah Salah</option>
+          </select>
+
+          <button id="startQuizBtn" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 1.05rem;">
+            Mulai Kuis 10 Soal →
+          </button>
+        </div>
+
+        <!-- 2. Active Quiz Card -->
+        <div id="quizActiveCard" class="quiz-active-card" style="display: none;">
+          <div class="quiz-top-bar">
+            <span id="quizProgressText" style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">
+              Soal 1 / 10
+            </span>
+            <div style="width: 140px;">
+              <div class="progress-bar-track" style="margin-bottom: 0;">
+                <div id="quizProgressBar" class="progress-bar-fill" style="width: 10%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="quiz-question-prompt">
+            <div id="quizPromptCategory" class="prompt-category">HIRAGANA • BASIC</div>
+            <div id="quizPromptChar" class="prompt-character">き</div>
+          </div>
+
+          <!-- Multiple Choice Grid -->
+          <div id="quizOptionsGrid" class="quiz-options-grid"></div>
+
+          <!-- Typing Input Box -->
+          <div id="quizTypingBox" class="quiz-typing-box" style="display: none;">
+            <input type="text" id="quizTextInput" class="quiz-text-input" placeholder="Ketik romaji (contoh: ka)..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            <button id="quizSubmitTypeBtn" class="btn btn-primary" style="padding: 10px 20px;">Kirim</button>
+          </div>
+
+          <!-- Feedback Banner -->
+          <div id="quizFeedbackBanner" class="quiz-feedback-banner"></div>
+        </div>
+
+        <!-- 3. Quiz Result Card -->
+        <div id="quizResultCard" class="quiz-setup-card" style="display: none; text-align: center;">
+          <div style="font-size: 3.5rem; margin-bottom: 8px;">🎉</div>
+          <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 6px;">Kuis Selesai!</h2>
+          <div id="quizResultScore" style="font-size: 2.2rem; font-weight: 800; color: var(--accent-red); margin-bottom: 4px;">
+            9 / 10
+          </div>
+          <div id="quizResultPct" style="font-size: 1rem; font-weight: 700; color: var(--accent-green); margin-bottom: 16px;">
+            90% Akurasi
+          </div>
+          <p id="quizResultSummary" style="color: var(--text-secondary); max-width: 440px; margin: 0 auto 24px; font-size: 0.95rem; line-height: 1.5;">
+            Luar biasa! Hafalan Kana Anda semakin mantap.
+          </p>
+
+          <!-- Karakter salah section -->
+          <div id="quizResultMissedSection" style="margin-bottom: 24px; text-align: left; display: none;">
+            <div style="font-weight: 700; font-size: 0.9rem; color: var(--accent-amber); margin-bottom: 8px;">
+              ⚠️ Karakter yang Perlu Dilatih Kembali:
+            </div>
+            <div id="quizResultMissedList" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+          </div>
+
+          <div style="display: flex; gap: 12px; justify-content: center;">
+            <button id="retryQuizBtn" class="btn btn-primary">Ulangi Kuis</button>
+            <button id="newQuizBtn" class="btn btn-secondary">Pilih Materi Lain</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         TAB 5: STATISTIK & PROGRES (statsTab)
+         ========================================================= -->
+    <section id="statsTab" class="tab-view" aria-labelledby="statsHeadline">
+      <div style="margin-bottom: 24px;">
+        <h2 id="statsHeadline" style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px;">
+          Statistik & Evaluasi Belajar
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Pantau karakter yang sudah Anda kuasai dan latih karakter yang sering keliru.
+        </p>
+      </div>
+
+      <!-- Metrics Grid -->
+      <div class="stats-summary-grid">
+        <div class="stat-metric-card">
+          <div class="stat-metric-num"><span id="statTotalMastered">0</span> / <span id="statTotalAll">224</span></div>
+          <div class="stat-metric-label">Total Karakter Dikuasai</div>
+        </div>
+        <div class="stat-metric-card">
+          <div class="stat-metric-num" id="statQuizAcc">0%</div>
+          <div class="stat-metric-label">Akurasi Rata-rata Kuis</div>
+        </div>
+        <div class="stat-metric-card">
+          <div class="stat-metric-num" id="statStreak">1 Hari</div>
+          <div class="stat-metric-label">Streak Belajar Aktif</div>
+        </div>
+      </div>
+
+      <!-- Detail Kategori Breakdown -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 24px; margin-bottom: 32px;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 16px;">Rincian Penguasaan Huruf</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Hiragana (Seion, Daku, Yoon)</div>
+            <div id="statHiraMastered" style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary);">0 / 104</div>
+          </div>
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Katakana (Seion, Daku, Yoon)</div>
+            <div id="statKataMastered" style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary);">0 / 120</div>
+          </div>
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Khusus Kombinasi Yōon</div>
+            <div id="statYoonMastered" style="font-size: 1.3rem; font-weight: 800; color: var(--accent-purple);">0 / 66</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Antrean Karakter Perlu Diulang -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 24px; margin-bottom: 32px;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;">Antrean Karakter Perlu Diulang</h3>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 16px;">
+          Karakter yang pernah Anda jawab keliru pada saat latihan kuis. Klik karakter untuk memeriksa kembali cara baca dan tipsnya.
+        </p>
+        <div id="statMissedEmpty" style="color: var(--text-muted); font-size: 0.9rem;">
+          Bagus sekali! Tidak ada karakter yang tercatat salah saat ini.
+        </div>
+        <div id="statMissedGrid" class="kana-grid" style="margin-bottom: 0;"></div>
+      </div>
+
+      <!-- Riwayat Kuis & Reset -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 24px;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 12px;">Riwayat 10 Kuis Terakhir</h3>
+        <ul id="quizHistoryList" style="list-style: none; margin-bottom: 24px;"></ul>
+
+        <div style="border-top: 1px solid var(--border-subtle); padding-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <span style="font-size: 0.85rem; color: var(--text-muted);">
+            Data disimpan di perangkat lokal (localStorage) browser Anda.
+          </span>
+          <button id="resetProgressBtn" class="btn btn-secondary" style="color: var(--accent-red); border-color: rgba(217, 56, 58, 0.3);">
+            Reset Seluruh Progres
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================
+       MODAL DETAIL KARAKTER (charModal)
+       ========================================================= -->
+  <div id="charModal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalChar">
+    <div class="modal-card">
+      <button id="modalCloseBtn" class="modal-close-btn" aria-label="Tutup Detail Karakter">✕</button>
+
+      <div class="modal-glyph-hero">
+        <div id="modalChar" class="modal-glyph-char">き</div>
+        <div id="modalRomaji" class="modal-romaji-badge">ki</div>
+        <div id="modalScriptType" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-top: 4px;">
+          HIRAGANA • BASIC
+        </div>
+      </div>
+
+      <div class="modal-action-row">
+        <button id="modalAudioBtn" class="btn btn-secondary">
+          🔊 Dengarkan Suara
+        </button>
+        <button id="modalMasterToggleBtn" class="btn btn-primary">
+          + Tandai Dikuasai
+        </button>
+      </div>
+
+      <div class="modal-section-title">Tips Pelafalan (Untuk Penutur Indonesia)</div>
+      <div id="modalTipContent" class="modal-tip-box">
+        Pelafalan standar.
+      </div>
+
+      <div id="modalSimilarSection" style="margin-top: 16px; display: none;">
+        <div class="modal-section-title">Karakter yang Mirip (Awas Tertukar!)</div>
+        <div id="modalSimilarList" class="modal-similar-chips"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-nav" aria-label="Navigasi Mobile">
+    <a href="#home" class="mobile-nav-item active" data-nav="homeTab">
+      <span class="mobile-nav-icon">🏠</span>
+      <span>Beranda</span>
+    </a>
+    <a href="#learn" class="mobile-nav-item" data-nav="learnTab">
+      <span class="mobile-nav-icon">🈸</span>
+      <span>Tabel</span>
+    </a>
+    <a href="#flashcard" class="mobile-nav-item" data-nav="flashcardTab">
+      <span class="mobile-nav-icon">🗂️</span>
+      <span>Kartu</span>
+    </a>
+    <a href="#quiz" class="mobile-nav-item" data-nav="quizTab">
+      <span class="mobile-nav-icon">🎯</span>
+      <span>Kuis</span>
+    </a>
+    <a href="#stats" class="mobile-nav-item" data-nav="statsTab">
+      <span class="mobile-nav-icon">📊</span>
+      <span>Stat</span>
+    </a>
+  </nav>
+
+  <!-- Site Footer -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="container">
+      <p>KanaLearn (かなラーン) — Media Pembelajaran Mandiri Hiragana, Katakana & Yōon.</p>
+      <p style="margin-top: 4px; font-size: 0.78rem;">100% Statis & Offline-friendly • Tanpa Server / Database</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/kana-data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
