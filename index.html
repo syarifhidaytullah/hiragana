@@ -3,8 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="KanaLearn — Media pembelajaran interaktif Hiragana & Katakana dasar serta kombinasi Yōon (kya, kyu, kyo) untuk penutur Indonesia.">
-  <title>KanaLearn — Belajar Hiragana & Katakana Interaktif</title>
+  <title>KanaLearn — Belajar Hiragana &amp; Katakana Interaktif (Audio, Flashcard &amp; Kuis)</title>
+  
+  <meta name="description" content="Aplikasi web gratis belajar membaca dan mengenali Hiragana &amp; Katakana dari nol. Lengkap dengan 224 karakter (Seion, Dakuten, Yōon), audio native, tips fonetik Indonesia, flashcard 3D, dan kuis interaktif.">
+  <meta name="keywords" content="belajar hiragana, belajar katakana, hiragana dan katakana, huruf jepang pemula, yoon kya kyu kyo, cara membaca hiragana, flashcard hiragana, kuis bahasa jepang, jlpt n5 pemula, modul kanji n5">
+  <meta name="author" content="Syarif Hidayatullah">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <link rel="canonical" href="https://kana.syarifhidayatullah.web.id/">
+
+  <!-- Favicon & Mobile Icons -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <meta name="theme-color" content="#b91c1c">
+
+  <!-- Open Graph / Facebook / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kana.syarifhidayatullah.web.id/">
+  <meta property="og:title" content="KanaLearn — Belajar Hiragana &amp; Katakana Interaktif">
+  <meta property="og:description" content="Kuasai alfabet Jepang dari huruf dasar hingga kombinasi Yōon (kya, kyu, kyo) secara gratis. Dilengkapi audio pelafalan asli, flashcard 3D, dan kuis cerdas.">
+  <meta property="og:image" content="https://kana.syarifhidayatullah.web.id/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="KanaLearn Web Pembelajaran Hiragana dan Katakana Interaktif">
+  <meta property="og:site_name" content="KanaLearn">
+  <meta property="og:locale" content="id_ID">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://kana.syarifhidayatullah.web.id/">
+  <meta name="twitter:title" content="KanaLearn — Belajar Hiragana &amp; Katakana Interaktif">
+  <meta name="twitter:description" content="Kuasai alfabet Jepang dari huruf dasar hingga kombinasi Yōon (kya, kyu, kyo) secara gratis dengan audio dan kuis interaktif.">
+  <meta name="twitter:image" content="https://kana.syarifhidayatullah.web.id/og-image.png">
+
+  <!-- Structured Data / JSON-LD Schema.org -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://kana.syarifhidayatullah.web.id/#webapp",
+        "url": "https://kana.syarifhidayatullah.web.id/",
+        "name": "KanaLearn",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "All",
+        "browserRequirements": "Requires JavaScript. Requires HTML5.",
+        "description": "Media pembelajaran interaktif Hiragana dan Katakana Jepang lengkap dengan audio pelafalan, flashcard 3D, dan kuis cerdas penampung huruf keliru.",
+        "inLanguage": "id",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "IDR"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://kana.syarifhidayatullah.web.id/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Bagaimana cara membaca huruf kombinasi Yōon seperti きゃ (kya), きゅ (kyu), dan きょ (kyo)?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Kombinasi Yōon dibaca tepat dalam satu ketukan utuh, bukan dua suku kata terpisah seperti 'ki-ya'. Huruf kecil ゃ (ya), ゅ (yu), dan ょ (yo) melebur langsung dengan konsonan baris 'i' sebelumnya."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Berapa total huruf Kana yang dapat dipelajari di KanaLearn?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Terdapat total 224 karakter yang mencakup Hiragana dan Katakana Seion (dasar), Dakuten & Handakuten, serta seluruh kombinasi Yōon lengkap."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Apakah website KanaLearn memerlukan pendaftaran akun atau login?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Tidak. KanaLearn dapat digunakan 100% gratis tanpa login. Seluruh progres belajar, streak harian, dan riwayat kuis tersimpan secara otomatis di memori browser (localStorage) perangkat Anda."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 
   <!-- Google Fonts: Zen Kaku Gothic New & Noto Sans JP -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

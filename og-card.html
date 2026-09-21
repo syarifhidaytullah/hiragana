@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>KanaLearn OG Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 1200px;
+      height: 630px;
+      overflow: hidden;
+      font-family: 'Zen Kaku Gothic New', -apple-system, sans-serif;
+      background: #0f1117;
+      color: #ffffff;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 64px 80px;
+    }
+    /* Glow effect */
+    .glow {
+      position: absolute;
+      top: -100px;
+      left: 100px;
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(225, 29, 72, 0.25) 0%, rgba(15, 17, 23, 0) 70%);
+      pointer-events: none;
+    }
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .left-content {
+      max-width: 620px;
+      z-index: 10;
+    }
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(225, 29, 72, 0.15);
+      border: 1px solid rgba(225, 29, 72, 0.4);
+      padding: 6px 16px;
+      border-radius: 9999px;
+      margin-bottom: 20px;
+    }
+    .badge-icon {
+      width: 24px;
+      height: 24px;
+      background: #e11d48;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Sans JP';
+      font-weight: 900;
+      font-size: 0.95rem;
+    }
+    .brand-name {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fb7185;
+      letter-spacing: 0.02em;
+    }
+    .hero-title {
+      font-size: 2.9rem;
+      font-weight: 900;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+    }
+    .hero-title span {
+      color: #fb7185;
+    }
+    .hero-sub {
+      font-size: 1.15rem;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+    .tags-row {
+      display: flex;
+      gap: 12px;
+    }
+    .tag-item {
+      background: #1c202a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+    /* Right Card Showcase */
+    .right-card {
+      z-index: 10;
+      background: rgba(26, 31, 44, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 32px 28px;
+      width: 360px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      text-align: center;
+    }
+    .right-label {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #818cf8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .yoon-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .yoon-unit {
+      background: #141720;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .yoon-char {
+      font-family: 'Noto Sans JP';
+      font-size: 2.8rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .yoon-romaji {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .right-callout {
+      background: rgba(225, 29, 72, 0.15);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      color: #ffe4e6;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="grid"></div>
+
+  <div class="left-content">
+    <div class="brand-pill">
+      <span class="badge-icon">か</span>
+      <span class="brand-name">KanaLearn • かなラーン</span>
+    </div>
+    <h1 class="hero-title">
+      Belajar Hiragana &amp;<br>
+      Katakana <span>Tanpa Pusing</span>
+    </h1>
+    <p class="hero-sub">
+      224 Karakter Lengkap, Audio Artikulasi Native, Tips Lidah Indonesia, dan Kuasai Kombinasi Yōon (きゃ, きゅ, きょ).
+    </p>
+    <div class="tags-row">
+      <span class="tag-item">🔊 Audio Native</span>
+      <span class="tag-item">🗂️ Flashcard 3D</span>
+      <span class="tag-item">🎯 Kuis Cerdas</span>
+      <span class="tag-item">💯 100% Gratis</span>
+    </div>
+  </div>
+
+  <div class="right-card">
+    <div class="right-label">Kaidah Kombinasi Yōon</div>
+    <div class="yoon-display">
+      <div class="yoon-unit">
+        <div class="yoon-char">き</div>
+        <div class="yoon-romaji">ki</div>
+      </div>
+      <span style="font-size: 1.5rem; color: #64748b; font-weight: 900;">+</span>
+      <div class="yoon-unit">
+        <div class="yoon-char">ゃ</div>
+        <div class="yoon-romaji">ya</div>
+      </div>
+      <span style="font-size: 1.5rem; color: #64748b; font-weight: 900;">=</span>
+      <div class="yoon-unit" style="background: #2a141b; border-color: rgba(225, 29, 72, 0.5);">
+        <div class="yoon-char" style="color: #fb7185;">きゃ</div>
+        <div class="yoon-romaji" style="color: #f43f5e; font-weight: 900;">KYA</div>
+      </div>
+    </div>
+    <div class="right-callout">
+      ✨ 1 Ketukan Penuh, Bukan 2 Suku Kata!
+    </div>
+  </div>
+</body>
+</html>

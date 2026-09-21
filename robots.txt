@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kana.syarifhidayatullah.web.id/sitemap.xml
