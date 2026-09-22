@@ -1229,14 +1229,28 @@
         playBtn.addEventListener("click", e => {
           e.stopPropagation();
           playBtn.classList.add("is-speaking");
-          Audio.speakKana(item.kana, null, () => playBtn.classList.remove("is-speaking"));
+          Audio.speakKana(item.kana, () => playBtn.classList.add("is-speaking"), () => playBtn.classList.remove("is-speaking"));
         });
       }
 
+      // Klik kartu langsung memutar pelafalan audio
+      card.addEventListener("click", e => {
+        if (e.target.closest(".vocab-romaji-pill") || e.target.closest(".vocab-play-btn")) return;
+        if (playBtn) playBtn.classList.add("is-speaking");
+        Audio.speakKana(item.kana, () => {
+          if (playBtn) playBtn.classList.add("is-speaking");
+        }, () => {
+          if (playBtn) playBtn.classList.remove("is-speaking");
+        });
+      });
+
       const romajiPill = card.querySelector(".vocab-romaji-pill");
-      if (romajiPill && isVocabRomajiHidden) {
-        romajiPill.addEventListener("click", () => {
-          romajiPill.classList.toggle("is-masked");
+      if (romajiPill) {
+        romajiPill.addEventListener("click", e => {
+          if (isVocabRomajiHidden) {
+            e.stopPropagation();
+            romajiPill.classList.toggle("is-masked");
+          }
         });
       }
 
@@ -1285,10 +1299,23 @@
       }
     }
 
+    if (vocabDrillKana) {
+      vocabDrillKana.style.cursor = "pointer";
+      vocabDrillKana.title = "Klik untuk dengarkan pelafalan";
+      vocabDrillKana.onclick = () => {
+        if (vocabDrillAudioBtn) vocabDrillAudioBtn.classList.add("is-speaking");
+        Audio.speakKana(item.kana, () => {
+          if (vocabDrillAudioBtn) vocabDrillAudioBtn.classList.add("is-speaking");
+        }, () => {
+          if (vocabDrillAudioBtn) vocabDrillAudioBtn.classList.remove("is-speaking");
+        });
+      };
+    }
+
     if (vocabDrillAudioBtn) {
       vocabDrillAudioBtn.onclick = () => {
         vocabDrillAudioBtn.classList.add("is-speaking");
-        Audio.speakKana(item.kana, null, () => vocabDrillAudioBtn.classList.remove("is-speaking"));
+        Audio.speakKana(item.kana, () => vocabDrillAudioBtn.classList.add("is-speaking"), () => vocabDrillAudioBtn.classList.remove("is-speaking"));
       };
     }
   }
