@@ -33,7 +33,7 @@
 
     { group: "ga", type: "dakuten", romaji: ["ga","gi","gu","ge","go"], hira: "がぎぐげご", kata: "ガギグゲゴ" },
     { group: "za", type: "dakuten", romaji: ["za","ji","zu","ze","zo"], hira: "ざじずぜぞ", kata: "ザジズゼゾ" },
-    { group: "da", type: "dakuten", romaji: ["da","ji","zu","de","do"], hira: "だぢづdeど", kata: "ダヂヅデド",
+    { group: "da", type: "dakuten", romaji: ["da","ji","zu","de","do"], hira: "だぢづでど", kata: "ダヂヅデド",
       ids: ["da","dji","dzu","de","do"] },
     { group: "ba", type: "dakuten", romaji: ["ba","bi","bu","be","bo"], hira: "ばびぶべぼ", kata: "バビブベボ" },
 
