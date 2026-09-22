@@ -20,6 +20,7 @@
   let currentScript = "hiragana"; // 'hiragana' | 'katakana'
   let currentFilter = "all";      // 'all' | 'basic' | 'dakuten' | 'yoon' | 'confusables' | 'special'
   let searchQuery = "";
+  let currentRenderedKanaList = [];
 
   // Vocab State
   let currentVocabScript = "all"; // 'all' | 'hiragana' | 'katakana'
@@ -198,6 +199,7 @@
       });
     }
 
+    currentRenderedKanaList = entries;
     kanaCardsContainer.innerHTML = "";
 
     if (entries.length === 0) {
@@ -370,11 +372,15 @@
   const modalChar = document.getElementById("modalChar");
   const modalRomaji = document.getElementById("modalRomaji");
   const modalScriptType = document.getElementById("modalScriptType");
+  const modalCharCounter = document.getElementById("modalCharCounter");
   const modalAudioBtn = document.getElementById("modalAudioBtn");
   const modalMasterToggleBtn = document.getElementById("modalMasterToggleBtn");
   const modalTipContent = document.getElementById("modalTipContent");
   const modalSimilarList = document.getElementById("modalSimilarList");
   const modalCloseBtn = document.getElementById("modalCloseBtn");
+  const modalPrevCharBtn = document.getElementById("modalPrevCharBtn");
+  const modalNextCharBtn = document.getElementById("modalNextCharBtn");
+  const startKanaTourBtn = document.getElementById("startKanaTourBtn");
 
   let activeModalEntry = null;
 
@@ -383,8 +389,39 @@
     activeModalEntry = entry;
 
     modalChar.textContent = entry.kana;
-    modalRomaji.textContent = entry.romaji + (entry.altRomaji.length > 0 ? " (alt: " + entry.altRomaji.join(", ") + ")" : "");
+    modalRomaji.textContent = entry.romaji + (entry.altRomaji && entry.altRomaji.length > 0 ? " (alt: " + entry.altRomaji.join(", ") + ")" : "");
     modalScriptType.textContent = `${entry.script.toUpperCase()} • ${entry.type.toUpperCase()}`;
+
+    // Navigasi berurutan huruf (Prev / Next)
+    let navList = currentRenderedKanaList;
+    if (!navList || navList.length === 0 || !navList.some(e => e.id === entry.id)) {
+      navList = KD.byScript(entry.script);
+    }
+
+    const currentIndex = navList.findIndex(e => e.id === entry.id);
+
+    if (modalCharCounter && currentIndex !== -1) {
+      modalCharCounter.textContent = `Huruf ${currentIndex + 1} dari ${navList.length}`;
+      modalCharCounter.style.display = "block";
+    } else if (modalCharCounter) {
+      modalCharCounter.style.display = "none";
+    }
+
+    if (modalPrevCharBtn) {
+      modalPrevCharBtn.onclick = (e) => {
+        e.stopPropagation();
+        const prevIdx = (currentIndex - 1 + navList.length) % navList.length;
+        openCharacterModal(navList[prevIdx]);
+      };
+    }
+
+    if (modalNextCharBtn) {
+      modalNextCharBtn.onclick = (e) => {
+        e.stopPropagation();
+        const nextIdx = (currentIndex + 1) % navList.length;
+        openCharacterModal(navList[nextIdx]);
+      };
+    }
 
     // Tips Indonesia
     const tip = KD.tipFor(entry);
@@ -436,7 +473,7 @@
     modalAudioBtn.addEventListener("click", () => {
       if (activeModalEntry) {
         modalAudioBtn.classList.add("is-speaking");
-        Audio.speakKana(activeModalEntry.kana, null, () => modalAudioBtn.classList.remove("is-speaking"));
+        Audio.speakKana(activeModalEntry.kana, () => modalAudioBtn.classList.add("is-speaking"), () => modalAudioBtn.classList.remove("is-speaking"));
       }
     });
   }
@@ -467,9 +504,31 @@
     });
   }
 
+  if (startKanaTourBtn) {
+    startKanaTourBtn.addEventListener("click", () => {
+      const list = (currentRenderedKanaList && currentRenderedKanaList.length > 0)
+        ? currentRenderedKanaList
+        : KD.byScript(currentScript);
+      if (list && list.length > 0) {
+        openCharacterModal(list[0]);
+      }
+    });
+  }
+
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape" && charModal && charModal.classList.contains("open")) {
-      closeModal();
+    if (charModal && charModal.classList.contains("open")) {
+      if (e.key === "Escape") {
+        closeModal();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        if (modalNextCharBtn) modalNextCharBtn.click();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (modalPrevCharBtn) modalPrevCharBtn.click();
+      } else if (e.key === " " || e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        if (modalAudioBtn) modalAudioBtn.click();
+      }
     }
   });
 

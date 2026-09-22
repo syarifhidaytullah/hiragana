@@ -306,10 +306,15 @@
           <button class="chip" data-filter="special">Karakter Khusus (っ/ー)</button>
         </div>
 
-        <!-- Search Bar -->
-        <div class="search-input-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="search" id="kanaSearchInput" class="search-input" placeholder="Cari romaji atau kana..." aria-label="Cari karakter Kana">
+        <!-- Search Bar & Tour Action -->
+        <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+          <div class="search-input-wrap" style="flex: 1; min-width: 220px;">
+            <span class="search-icon">🔍</span>
+            <input type="search" id="kanaSearchInput" class="search-input" placeholder="Cari romaji atau kana..." aria-label="Cari karakter Kana">
+          </div>
+          <button id="startKanaTourBtn" class="btn btn-primary" style="white-space: nowrap; padding: 10px 18px;" title="Mulai dari huruf pertama dan telusuri satu per satu">
+            ▶️ Telusuri Berurutan
+          </button>
         </div>
       </div>
 
@@ -733,6 +738,7 @@
       <button id="modalCloseBtn" class="modal-close-btn" aria-label="Tutup Detail Karakter">✕</button>
 
       <div class="modal-glyph-hero">
+        <div id="modalCharCounter" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">Huruf 1 dari 46</div>
         <div id="modalChar" class="modal-glyph-char">き</div>
         <div id="modalRomaji" class="modal-romaji-badge">ki</div>
         <div id="modalScriptType" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-top: 4px;">
@@ -757,6 +763,16 @@
       <div id="modalSimilarSection" style="margin-top: 16px; display: none;">
         <div class="modal-section-title">Karakter yang Mirip (Awas Tertukar!)</div>
         <div id="modalSimilarList" class="modal-similar-chips"></div>
+      </div>
+
+      <!-- Navigasi Huruf: Sebelumnya & Selanjutnya -->
+      <div class="modal-nav-row" style="display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+        <button id="modalPrevCharBtn" class="btn btn-secondary" style="flex: 1; justify-content: center; padding: 12px 14px;" title="Huruf sebelumnya (bisa tekan panah kiri ←)">
+          ← Huruf Sebelumnya
+        </button>
+        <button id="modalNextCharBtn" class="btn btn-primary" style="flex: 1; justify-content: center; padding: 12px 14px;" title="Huruf selanjutnya (bisa tekan panah kanan →)">
+          Huruf Selanjutnya →
+        </button>
       </div>
     </div>
   </div>
