@@ -7,6 +7,7 @@
   "use strict";
 
   const KD = window.KanaData;
+  const VD = window.VocabData;
   const Storage = window.KanaStorage;
   const Audio = window.KanaAudio;
 
@@ -19,6 +20,15 @@
   let currentScript = "hiragana"; // 'hiragana' | 'katakana'
   let currentFilter = "all";      // 'all' | 'basic' | 'dakuten' | 'yoon' | 'confusables' | 'special'
   let searchQuery = "";
+
+  // Vocab State
+  let currentVocabScript = "all"; // 'all' | 'hiragana' | 'katakana'
+  let currentVocabCategory = "all";
+  let vocabSearchQuery = "";
+  let isVocabRomajiHidden = false;
+  let isVocabDrillActive = false;
+  let vocabDrillIndex = 0;
+  let vocabDrillList = [];
 
   // Flashcard State
   let flashcardDeck = [];
@@ -64,6 +74,7 @@
 
     // Refresh view specific contents
     if (tabId === "learnTab") renderKanaSection();
+    if (tabId === "vocabTab") renderVocabSection();
     if (tabId === "flashcardTab") initFlashcards();
     if (tabId === "quizTab" && quizQuestions.length === 0) renderQuizSetup();
     if (tabId === "statsTab") renderStatsView();
@@ -669,6 +680,23 @@
         pool = KD.byScript("hiragana");
       } else if (scope === "all-katakana") {
         pool = KD.byScript("katakana");
+      } else if (scope === "vocab-n5") {
+        const vocabPool = (VD && VD.VOCAB) ? VD.VOCAB : [];
+        const shuffledVocab = (VD ? VD.shuffle(vocabPool) : vocabPool.slice()).slice(0, 10);
+        quizQuestions = shuffledVocab.map(entry => {
+          return VD.buildVocabQuestion(entry, vocabPool);
+        });
+
+        currentQuizIndex = 0;
+        quizScore = 0;
+        quizMissed = [];
+
+        if (quizSetupCard) quizSetupCard.style.display = "none";
+        if (quizActiveCard) quizActiveCard.style.display = "block";
+        if (quizResultCard) quizResultCard.style.display = "none";
+
+        renderCurrentQuestion();
+        return;
       } else if (scope === "missed") {
         const metrics = Storage.getMetrics();
         pool = metrics.missedIds.map(id => KD.getById(id)).filter(Boolean);
@@ -708,6 +736,45 @@
     }
 
     const q = quizQuestions[currentQuizIndex];
+
+    // Handle Vocab Question
+    if (q.isVocab) {
+      quizProgressText.textContent = `Soal ${currentQuizIndex + 1} / ${quizQuestions.length}`;
+      quizProgressBar.style.transform = `scaleX(${currentQuizIndex / quizQuestions.length})`;
+
+      quizPromptCategory.textContent = `KOSAKATA • ${q.script.toUpperCase()}`;
+      quizPromptChar.textContent = q.prompt;
+      quizPromptChar.className = "prompt-character";
+
+      quizFeedbackBanner.className = "quiz-feedback-banner";
+      quizFeedbackBanner.innerHTML = "";
+
+      if (quizMode === "typing") {
+        quizOptionsGrid.style.display = "none";
+        quizTypingBox.style.display = "flex";
+        quizTextInput.value = "";
+        quizTextInput.placeholder = `Ketik romaji (contoh: ${q.word.romaji})...`;
+        quizTextInput.disabled = false;
+        quizSubmitTypeBtn.disabled = false;
+        setTimeout(() => quizTextInput.focus(), 100);
+      } else {
+        quizOptionsGrid.style.display = "grid";
+        quizTypingBox.style.display = "none";
+        quizOptionsGrid.innerHTML = "";
+
+        q.options.forEach(opt => {
+          const btn = document.createElement("button");
+          btn.className = "quiz-option-btn";
+          btn.textContent = opt.label;
+          btn.addEventListener("click", () => handleOptionSelect(btn, opt.id, q.answerId));
+          quizOptionsGrid.appendChild(btn);
+        });
+      }
+
+      Audio.speakKana(q.word.kana);
+      return;
+    }
+
     const entry = KD.getById(q.entryId);
 
     // Update progress
@@ -732,6 +799,7 @@
       quizOptionsGrid.style.display = "none";
       quizTypingBox.style.display = "flex";
       quizTextInput.value = "";
+      quizTextInput.placeholder = "Ketik romaji (contoh: ka)...";
       quizTextInput.disabled = false;
       quizSubmitTypeBtn.disabled = false;
       setTimeout(() => quizTextInput.focus(), 100);
@@ -766,13 +834,19 @@
 
   function handleTypingSubmit() {
     const q = quizQuestions[currentQuizIndex];
-    const entry = KD.getById(q.entryId);
-    const typed = quizTextInput.value.trim();
+    const typed = quizTextInput.value.trim().toLowerCase();
     if (!typed) return;
 
     quizTextInput.disabled = true;
     quizSubmitTypeBtn.disabled = true;
 
+    if (q.isVocab) {
+      const isCorrect = typed === q.word.romaji.toLowerCase();
+      processAnswerOutcome(isCorrect, q.answerId);
+      return;
+    }
+
+    const entry = KD.getById(q.entryId);
     const isCorrect = KD.matchRomaji(entry, typed);
     processAnswerOutcome(isCorrect, q.answerId);
   }
@@ -789,8 +863,46 @@
 
   function processAnswerOutcome(isCorrect, correctId, selectedBtn) {
     const q = quizQuestions[currentQuizIndex];
-    const entry = KD.getById(q.entryId);
 
+    if (q.isVocab) {
+      if (isCorrect) {
+        quizScore++;
+        Audio.playCorrectSound();
+        if (selectedBtn) selectedBtn.classList.add("correct");
+
+        quizFeedbackBanner.className = "quiz-feedback-banner show correct-fb";
+        quizFeedbackBanner.innerHTML = `
+          <strong>✓ Benar sekali!</strong> ${q.word.kana} (${q.word.romaji}) = <em>${q.word.meaning}</em>
+        `;
+      } else {
+        Audio.playWrongSound();
+        quizMissed.push({ id: q.word.id, kana: q.word.kana, romaji: q.word.romaji, isVocab: true });
+        if (selectedBtn) selectedBtn.classList.add("wrong");
+
+        if (quizOptionsGrid) {
+          const btns = quizOptionsGrid.querySelectorAll(".quiz-option-btn");
+          btns.forEach(b => {
+            if (b.textContent.includes(q.word.meaning)) {
+              b.classList.add("correct");
+            }
+          });
+        }
+
+        quizFeedbackBanner.className = "quiz-feedback-banner show wrong-fb";
+        quizFeedbackBanner.innerHTML = `
+          <strong>✗ Kurang tepat.</strong> Jawaban benar: <strong>${q.word.kana} (${q.word.romaji}) = ${q.word.meaning}</strong>.
+          ${q.word.tip ? `<div style="margin-top: 4px; font-size: 0.85rem;">💡 ${q.word.tip}</div>` : ""}
+        `;
+      }
+
+      setTimeout(() => {
+        currentQuizIndex++;
+        renderCurrentQuestion();
+      }, isCorrect ? 1000 : 2200);
+      return;
+    }
+
+    const entry = KD.getById(q.entryId);
     Storage.recordQuizAnswer(entry.id, isCorrect);
 
     if (isCorrect) {
@@ -847,11 +959,11 @@
 
     const summaryEl = document.getElementById("quizResultSummary");
     if (pct >= 80) {
-      summaryEl.textContent = "Luar biasa! Hafalan Kana Anda semakin mantap dan refleks membaca Anda sudah sangat baik.";
+      summaryEl.textContent = "Luar biasa! Refleks membaca Anda sudah sangat mantap dan cepat.";
     } else if (pct >= 50) {
-      summaryEl.textContent = "Bagus! Terus latih karakter yang masih ragu, terutama perbedaan goresan dan vokal.";
+      summaryEl.textContent = "Bagus! Terus latih kosakata dan karakter yang masih ragu.";
     } else {
-      summaryEl.textContent = "Jangan menyerah! Buka kembali menu Flashcard dan Tabel untuk memantapkan karakter yang keliru.";
+      summaryEl.textContent = "Jangan menyerah! Buka kembali menu Kosakata dan Tabel untuk memperkuat latihan membaca.";
     }
 
     const missedSection = document.getElementById("quizResultMissedSection");
@@ -863,7 +975,12 @@
         const item = document.createElement("div");
         item.className = "similar-chip";
         item.textContent = `${m.kana} (${m.romaji})`;
-        item.addEventListener("click", () => openCharacterModal(m));
+        if (m.isVocab) {
+          item.title = "Klik untuk dengarkan pelafalan";
+          item.addEventListener("click", () => Audio.speakKana(m.kana));
+        } else {
+          item.addEventListener("click", () => openCharacterModal(m));
+        }
         missedList.appendChild(item);
       });
     } else {
@@ -985,11 +1102,288 @@
     themeToggleBtn.textContent = savedTheme === "dark" ? "☀️" : "🌙";
   }
 
+  /* =========================================================
+   * KOSAKATA N5 (VOCABULARY DRILL & CATALOG CONTROLLER)
+   * ========================================================= */
+  const vocabGridContainer = document.getElementById("vocabGridContainer");
+  const vocabEmptyNotice = document.getElementById("vocabEmptyNotice");
+  const vocabCategoryChips = document.getElementById("vocabCategoryChips");
+  const vocabSearchInput = document.getElementById("vocabSearchInput");
+  const vocabToggleRomajiBtn = document.getElementById("vocabToggleRomajiBtn");
+  const vocabToggleViewBtn = document.getElementById("vocabToggleViewBtn");
+  const vocabScriptBtns = document.querySelectorAll("[data-vocab-script]");
+
+  const vocabDrillStage = document.getElementById("vocabDrillStage");
+  const vocabDrillCounter = document.getElementById("vocabDrillCounter");
+  const vocabDrillBadge = document.getElementById("vocabDrillBadge");
+  const vocabDrillKana = document.getElementById("vocabDrillKana");
+  const vocabDrillAudioBtn = document.getElementById("vocabDrillAudioBtn");
+  const vocabDrillRevealBox = document.getElementById("vocabDrillRevealBox");
+  const vocabDrillRevealBtn = document.getElementById("vocabDrillRevealBtn");
+  const vocabDrillRevealedContent = document.getElementById("vocabDrillRevealedContent");
+  const vocabDrillRomaji = document.getElementById("vocabDrillRomaji");
+  const vocabDrillMeaning = document.getElementById("vocabDrillMeaning");
+  const vocabDrillTip = document.getElementById("vocabDrillTip");
+  const vocabDrillPrevBtn = document.getElementById("vocabDrillPrevBtn");
+  const vocabDrillNextBtn = document.getElementById("vocabDrillNextBtn");
+  const vocabDrillShuffleBtn = document.getElementById("vocabDrillShuffleBtn");
+  const ctaVocabBtn = document.getElementById("ctaVocabBtn");
+
+  function renderVocabSection() {
+    if (!VD) return;
+
+    // Render category chips jika belum dirender
+    if (vocabCategoryChips && vocabCategoryChips.children.length === 0) {
+      VD.CATEGORIES.forEach(cat => {
+        const chip = document.createElement("button");
+        chip.className = `chip ${cat.id === currentVocabCategory ? "active" : ""}`;
+        chip.textContent = cat.label;
+        chip.setAttribute("data-vocab-cat", cat.id);
+        chip.addEventListener("click", () => {
+          vocabCategoryChips.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+          chip.classList.add("active");
+          currentVocabCategory = cat.id;
+          vocabDrillIndex = 0;
+          renderVocabList();
+        });
+        vocabCategoryChips.appendChild(chip);
+      });
+    }
+
+    renderVocabList();
+  }
+
+  function renderVocabList() {
+    if (!vocabGridContainer || !VD) return;
+
+    const items = VD.filterVocab({
+      script: currentVocabScript,
+      category: currentVocabCategory,
+      query: vocabSearchQuery
+    });
+
+    vocabDrillList = items;
+    if (vocabDrillIndex >= vocabDrillList.length) {
+      vocabDrillIndex = 0;
+    }
+
+    // Tampilan Drill (Kartu Tunggal)
+    if (isVocabDrillActive) {
+      vocabGridContainer.style.display = "none";
+      if (items.length === 0) {
+        if (vocabDrillStage) vocabDrillStage.style.display = "none";
+        if (vocabEmptyNotice) vocabEmptyNotice.style.display = "block";
+      } else {
+        if (vocabEmptyNotice) vocabEmptyNotice.style.display = "none";
+        if (vocabDrillStage) {
+          vocabDrillStage.style.display = "flex";
+          renderVocabDrillCard();
+        }
+      }
+      return;
+    }
+
+    // Tampilan Grid (Katalog)
+    if (vocabDrillStage) vocabDrillStage.style.display = "none";
+
+    if (items.length === 0) {
+      vocabGridContainer.style.display = "none";
+      if (vocabEmptyNotice) vocabEmptyNotice.style.display = "block";
+      return;
+    }
+
+    if (vocabEmptyNotice) vocabEmptyNotice.style.display = "none";
+    vocabGridContainer.style.display = "grid";
+    vocabGridContainer.innerHTML = "";
+
+    const frag = document.createDocumentFragment();
+    items.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "vocab-card";
+
+      const catObj = VD.CATEGORIES.find(c => c.id === item.category);
+      const catLabel = catObj ? catObj.label : item.category;
+
+      card.innerHTML = `
+        <div class="vocab-card-header">
+          <span class="vocab-script-badge ${item.script}">${item.script}</span>
+          <span class="vocab-category-tag">${escapeHtml(catLabel)}</span>
+        </div>
+        <div class="vocab-main-row">
+          <div class="vocab-kana-text">${escapeHtml(item.kana)}</div>
+          <button class="vocab-play-btn" aria-label="Putar suara ${escapeHtml(item.kana)}" title="Dengarkan Pelafalan">
+            🔊
+          </button>
+        </div>
+        <div class="vocab-reading-row">
+          <span class="vocab-romaji-pill ${isVocabRomajiHidden ? "is-masked" : ""}" title="${isVocabRomajiHidden ? "Klik untuk mengintip romaji" : "Pelafalan romaji"}">
+            ${escapeHtml(item.romaji)}
+          </span>
+        </div>
+        <div class="vocab-meaning-text">${escapeHtml(item.meaning)}</div>
+        ${item.tip ? `<div class="vocab-tip-text">💡 ${escapeHtml(item.tip)}</div>` : ""}
+      `;
+
+      const playBtn = card.querySelector(".vocab-play-btn");
+      if (playBtn) {
+        playBtn.addEventListener("click", e => {
+          e.stopPropagation();
+          playBtn.classList.add("is-speaking");
+          Audio.speakKana(item.kana, null, () => playBtn.classList.remove("is-speaking"));
+        });
+      }
+
+      const romajiPill = card.querySelector(".vocab-romaji-pill");
+      if (romajiPill && isVocabRomajiHidden) {
+        romajiPill.addEventListener("click", () => {
+          romajiPill.classList.toggle("is-masked");
+        });
+      }
+
+      frag.appendChild(card);
+    });
+
+    vocabGridContainer.appendChild(frag);
+  }
+
+  function renderVocabDrillCard() {
+    if (!vocabDrillList || vocabDrillList.length === 0) return;
+    const item = vocabDrillList[vocabDrillIndex];
+    if (!item) return;
+
+    if (vocabDrillCounter) {
+      vocabDrillCounter.textContent = `Kata ${vocabDrillIndex + 1} dari ${vocabDrillList.length}`;
+    }
+
+    if (vocabDrillBadge) {
+      const catObj = VD.CATEGORIES.find(c => c.id === item.category);
+      const catLabel = catObj ? catObj.label : item.category;
+      vocabDrillBadge.className = `vocab-script-badge ${item.script}`;
+      vocabDrillBadge.textContent = `${item.script.toUpperCase()} • ${catLabel.toUpperCase()}`;
+    }
+
+    if (vocabDrillKana) {
+      vocabDrillKana.textContent = item.kana;
+    }
+
+    if (vocabDrillRevealedContent) {
+      vocabDrillRevealedContent.style.display = "none";
+    }
+    if (vocabDrillRevealBtn) {
+      vocabDrillRevealBtn.style.display = "block";
+    }
+
+    if (vocabDrillRomaji) vocabDrillRomaji.textContent = item.romaji;
+    if (vocabDrillMeaning) vocabDrillMeaning.textContent = item.meaning;
+
+    if (vocabDrillTip) {
+      if (item.tip) {
+        vocabDrillTip.style.display = "block";
+        vocabDrillTip.textContent = "💡 " + item.tip;
+      } else {
+        vocabDrillTip.style.display = "none";
+      }
+    }
+
+    if (vocabDrillAudioBtn) {
+      vocabDrillAudioBtn.onclick = () => {
+        vocabDrillAudioBtn.classList.add("is-speaking");
+        Audio.speakKana(item.kana, null, () => vocabDrillAudioBtn.classList.remove("is-speaking"));
+      };
+    }
+  }
+
+  // Vocab Listeners
+  if (vocabScriptBtns.length > 0) {
+    vocabScriptBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        vocabScriptBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentVocabScript = btn.getAttribute("data-vocab-script");
+        vocabDrillIndex = 0;
+        renderVocabList();
+      });
+    });
+  }
+
+  if (vocabSearchInput) {
+    vocabSearchInput.addEventListener("input", e => {
+      vocabSearchQuery = e.target.value;
+      vocabDrillIndex = 0;
+      renderVocabList();
+    });
+  }
+
+  if (vocabToggleRomajiBtn) {
+    vocabToggleRomajiBtn.addEventListener("click", () => {
+      isVocabRomajiHidden = !isVocabRomajiHidden;
+      vocabToggleRomajiBtn.textContent = isVocabRomajiHidden
+        ? "👁️ Romaji: Sembunyi (Uji Baca)"
+        : "👁️ Romaji: Tampil";
+      vocabToggleRomajiBtn.classList.toggle("active", isVocabRomajiHidden);
+      renderVocabList();
+    });
+  }
+
+  if (vocabToggleViewBtn) {
+    vocabToggleViewBtn.addEventListener("click", () => {
+      isVocabDrillActive = !isVocabDrillActive;
+      vocabToggleViewBtn.textContent = isVocabDrillActive
+        ? "📋 Tampilkan Semua (Katalog)"
+        : "⚡ Mode Latihan Kilat";
+      vocabToggleViewBtn.classList.toggle("active", isVocabDrillActive);
+      renderVocabList();
+    });
+  }
+
+  if (vocabDrillRevealBtn) {
+    vocabDrillRevealBtn.addEventListener("click", () => {
+      vocabDrillRevealBtn.style.display = "none";
+      if (vocabDrillRevealedContent) vocabDrillRevealedContent.style.display = "block";
+      const item = vocabDrillList[vocabDrillIndex];
+      if (item) Audio.speakKana(item.kana);
+    });
+  }
+
+  if (vocabDrillNextBtn) {
+    vocabDrillNextBtn.addEventListener("click", () => {
+      if (vocabDrillIndex < vocabDrillList.length - 1) {
+        vocabDrillIndex++;
+      } else {
+        vocabDrillIndex = 0;
+      }
+      renderVocabDrillCard();
+    });
+  }
+
+  if (vocabDrillPrevBtn) {
+    vocabDrillPrevBtn.addEventListener("click", () => {
+      if (vocabDrillIndex > 0) {
+        vocabDrillIndex--;
+      } else {
+        vocabDrillIndex = Math.max(0, vocabDrillList.length - 1);
+      }
+      renderVocabDrillCard();
+    });
+  }
+
+  if (vocabDrillShuffleBtn) {
+    vocabDrillShuffleBtn.addEventListener("click", () => {
+      vocabDrillList = VD.shuffle(vocabDrillList);
+      vocabDrillIndex = 0;
+      renderVocabDrillCard();
+    });
+  }
+
   // Quick Action Buttons on Home
   const heroStartBtn = document.getElementById("heroStartBtn");
   const heroQuizBtn = document.getElementById("heroQuizBtn");
   const ctaYoonBtn = document.getElementById("ctaYoonBtn");
   const ctaConfusableBtn = document.getElementById("ctaConfusableBtn");
+
+  if (ctaVocabBtn) {
+    ctaVocabBtn.addEventListener("click", () => switchTab("vocabTab"));
+  }
 
   if (heroStartBtn) {
     heroStartBtn.addEventListener("click", () => switchTab("learnTab"));

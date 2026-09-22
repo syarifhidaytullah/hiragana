@@ -1465,14 +1465,23 @@ main {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  padding: 6px;
-  width: 20%;
+  padding: 4px 2px;
+  flex: 1;
+  min-width: 0;
   min-height: 48px;
   transition: var(--transition);
+  text-align: center;
+}
+
+.mobile-nav-item span:not(.mobile-nav-icon) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .mobile-nav-item.active {
@@ -1480,7 +1489,7 @@ main {
 }
 
 .mobile-nav-icon {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   line-height: 1;
 }
 
@@ -1504,4 +1513,245 @@ main {
   font-size: 0.85rem;
   color: var(--text-muted);
   background: var(--bg-surface);
+}
+
+/* =========================================================
+ * KOSAKATA N5 (VOCABULARY DRILL & CATALOG)
+ * ========================================================= */
+.vocab-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.vocab-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.vocab-mode-toggles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vocab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.vocab-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.vocab-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-card);
+}
+
+.vocab-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.vocab-script-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vocab-script-badge.hiragana {
+  background: var(--bg-tint-red);
+  color: var(--accent-red);
+}
+
+.vocab-script-badge.katakana {
+  background: var(--bg-tint-blue);
+  color: #0284c7;
+}
+
+.vocab-category-tag {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.vocab-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.vocab-kana-text {
+  font-family: var(--font-kana);
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.vocab-play-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.vocab-play-btn:hover {
+  background: var(--accent-red);
+  color: #fff;
+  border-color: var(--accent-red);
+  transform: scale(1.06);
+}
+
+.vocab-reading-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.vocab-romaji-pill {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent-red);
+  background: var(--bg-subtle);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.03em;
+  transition: var(--transition);
+}
+
+.vocab-romaji-pill.is-masked {
+  background: var(--border-subtle);
+  color: transparent;
+  user-select: none;
+  cursor: pointer;
+  filter: blur(4px);
+}
+
+.vocab-romaji-pill.is-masked:hover {
+  filter: blur(0);
+  color: var(--accent-red);
+}
+
+.vocab-meaning-text {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+
+.vocab-tip-text {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  background: var(--bg-subtle);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  margin-top: 6px;
+  border-left: 3px solid var(--accent-red);
+}
+
+/* Single-card drill trainer */
+.vocab-drill-stage {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 36px 24px;
+  text-align: center;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: var(--shadow-sm);
+}
+
+.vocab-drill-counter {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.vocab-drill-kana {
+  font-family: var(--font-kana);
+  font-size: 3.8rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-primary);
+  margin: 12px 0 16px;
+  letter-spacing: 0.04em;
+}
+
+.vocab-drill-reveal-box {
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 14px 0 24px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  width: 100%;
+}
+
+.vocab-kanji-upsell-card {
+  margin-top: 36px;
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-subtle) 100%);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.vocab-kanji-upsell-card::before {
+  content: "字";
+  position: absolute;
+  right: -15px;
+  bottom: -35px;
+  font-family: var(--font-kana);
+  font-size: 11rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  opacity: 0.04;
+  pointer-events: none;
 }

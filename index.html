@@ -130,6 +130,7 @@
       <nav class="desktop-nav" aria-label="Navigasi Utama">
         <a href="#home" class="nav-link active" data-nav="homeTab">🏠 Beranda</a>
         <a href="#learn" class="nav-link" data-nav="learnTab">🈸 Tabel Kana</a>
+        <a href="#vocab" class="nav-link" data-nav="vocabTab">📖 Kosakata N5</a>
         <a href="#flashcard" class="nav-link" data-nav="flashcardTab">🗂️ Flashcard</a>
         <a href="#quiz" class="nav-link" data-nav="quizTab">🎯 Kuis</a>
         <a href="#stats" class="nav-link" data-nav="statsTab">📊 Statistik</a>
@@ -236,6 +237,18 @@
             Latihan Karakter Mirip →
           </button>
         </div>
+
+        <div class="feature-box">
+          <div>
+            <h3 class="feature-title"><span class="feature-icon">📖</span> Kosakata N5 (Tanpa Kanji)</h3>
+            <p class="feature-desc">
+              Latih refleks membaca Hiragana &amp; Katakana langsung dalam 150+ kosakata nyata N5 sehari-hari sebelum melangkah ke huruf Kanji.
+            </p>
+          </div>
+          <button id="ctaVocabBtn" class="btn btn-ghost" style="justify-content: flex-start; padding-left: 0;">
+            Latihan Baca Kosakata →
+          </button>
+        </div>
       </div>
 
       <!-- Rekomendasi Modul Lanjutan (Kanji N5) -->
@@ -311,6 +324,122 @@
 
       <!-- Special Characters Container (rendered when special filter active) -->
       <div id="specialSectionContainer" style="display: none;"></div>
+    </section>
+
+    <!-- =========================================================
+         TAB: KOSAKATA DASAR N5 (vocabTab)
+         ========================================================= -->
+    <section id="vocabTab" class="tab-view" aria-labelledby="vocabHeadline">
+      <div style="margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
+          <h2 id="vocabHeadline" style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0;">
+            Latihan Membaca Kosakata Dasar N5
+          </h2>
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent-green); background: var(--bg-tint-green); padding: 4px 10px; border-radius: var(--radius-full);">
+            ✓ 100% Ditulis dalam Kana
+          </span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Membiasakan refleks membaca kata utuh dalam huruf Hiragana &amp; Katakana tanpa kanji. Klik audio untuk melatih kepekaan telinga dengan pelafalan asli.
+        </p>
+      </div>
+
+      <!-- Vocab Toolbar -->
+      <div class="vocab-toolbar">
+        <!-- Script Segmented Control -->
+        <div class="script-segmented-control" role="group" aria-label="Pilih Jenis Huruf Kosakata">
+          <button class="segment-btn active" data-vocab-script="all">Semua (151)</button>
+          <button class="segment-btn" data-vocab-script="hiragana">Hiragana (103)</button>
+          <button class="segment-btn" data-vocab-script="katakana">Katakana (48)</button>
+        </div>
+
+        <!-- Category Filter Chips -->
+        <div id="vocabCategoryChips" class="filter-chips" role="group" aria-label="Kategori Kosakata"></div>
+
+        <!-- Search & Mode Actions Row -->
+        <div class="vocab-actions-row">
+          <div class="search-input-wrap" style="flex: 1; min-width: 240px;">
+            <span class="search-icon">🔍</span>
+            <input type="search" id="vocabSearchInput" class="search-input" placeholder="Cari kata kana, romaji, atau arti bahasa Indonesia..." aria-label="Cari kosakata">
+          </div>
+
+          <div class="vocab-mode-toggles">
+            <button id="vocabToggleRomajiBtn" class="btn btn-secondary" title="Sembunyikan atau tampilkan romaji untuk melatih refleks membaca kana">
+              👁️ Romaji: Tampil
+            </button>
+            <button id="vocabToggleViewBtn" class="btn btn-secondary" title="Ganti mode antara katalog dan latihan cepat">
+              ⚡ Mode Latihan Kilat
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drill View Stage (Step-by-step Card Trainer) -->
+      <div id="vocabDrillStage" class="vocab-drill-stage" style="display: none;">
+        <div class="vocab-drill-counter" id="vocabDrillCounter">Kata 1 dari 151</div>
+        <span id="vocabDrillBadge" class="vocab-script-badge hiragana">HIRAGANA • SALAM</span>
+        <div id="vocabDrillKana" class="vocab-drill-kana">おはよう</div>
+
+        <button id="vocabDrillAudioBtn" class="btn btn-secondary" style="margin-bottom: 12px;">
+          🔊 Dengarkan Pelafalan
+        </button>
+
+        <div id="vocabDrillRevealBox" class="vocab-drill-reveal-box">
+          <button id="vocabDrillRevealBtn" class="btn btn-ghost" style="font-weight: 700; color: var(--accent-red);">
+            🔍 Tampilkan Bacaan &amp; Arti
+          </button>
+          <div id="vocabDrillRevealedContent" style="display: none; text-align: center; width: 100%;">
+            <div id="vocabDrillRomaji" class="vocab-romaji-pill" style="display: inline-block; margin-bottom: 8px;">ohayou</div>
+            <div id="vocabDrillMeaning" class="vocab-meaning-text" style="font-size: 1.15rem; margin-bottom: 6px;">Selamat pagi (santai)</div>
+            <div id="vocabDrillTip" class="vocab-tip-text" style="text-align: left;">Digunakan sesama teman/keluarga di pagi hari.</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; width: 100%; justify-content: center; flex-wrap: wrap;">
+          <button id="vocabDrillPrevBtn" class="btn btn-secondary" style="flex: 1; min-width: 120px;">
+            ← Sebelumnya
+          </button>
+          <button id="vocabDrillShuffleBtn" class="btn btn-secondary" title="Acak urutan kata">
+            🔀 Acak Kata
+          </button>
+          <button id="vocabDrillNextBtn" class="btn btn-primary" style="flex: 1; min-width: 120px;">
+            Selanjutnya →
+          </button>
+        </div>
+      </div>
+
+      <!-- Catalog Grid View -->
+      <div id="vocabGridContainer" class="vocab-grid"></div>
+
+      <!-- Empty State Notice -->
+      <div id="vocabEmptyNotice" style="display: none; text-align: center; padding: 48px 16px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 24px;">
+        <div style="font-size: 2.5rem; margin-bottom: 8px;">🔍</div>
+        <p style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">Tidak ada kosakata yang cocok dengan filter atau pencarian.</p>
+        <p style="font-size: 0.88rem; margin-top: 4px;">Coba gunakan kata kunci lain atau pilih filter "Semua Kategori".</p>
+      </div>
+
+      <!-- Rekomendasi Modul Lanjutan: Starter Kit Kanji N5 (Funnel Lynk.id) -->
+      <section class="vocab-kanji-upsell-card">
+        <div style="display: flex; flex-direction: column; gap: 16px; position: relative; z-index: 2;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <span style="font-size: 0.82rem; font-weight: 800; color: var(--accent-red); letter-spacing: 0.04em;">ROADMAP NAIK LEVEL • SETELAH KANA</span>
+            <span style="font-size: 0.85rem; color: var(--text-secondary); background: var(--bg-surface); padding: 4px 10px; border-radius: 9999px; font-weight: 600; border: 1px solid var(--border-subtle);">Siap Menuju JLPT N5</span>
+          </div>
+          <div>
+            <h3 style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;">
+              Sudah Lancar Membaca Kosakata di Atas? Saatnya Melangkah ke Kanji N5!
+            </h3>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; max-width: 820px;">
+              Di dunia nyata, hampir seluruh kosakata bahasa Jepang di atas ditulis menggunakan huruf <strong>Kanji</strong> (misalnya: <em>ほん → 本</em>, <em>たべる → 食べる</em>, <em>みず → 水</em>, <em>くるま → 車</em>). Setelah refleks membaca Hiragana &amp; Katakana Anda terasah di sini, kuasai fondasi kanji dengan <strong>Starter Kit Kanji N5</strong>: trik menguasai Onyomi vs Kunyomi, 4 aturan emas urutan goresan tangan (stroke order), dan lembar kotak latihan menulis Genkouyoushi yang siap dicetak!
+            </p>
+          </div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px;">
+            <a href="https://lynk.id/syarifhidayatullah/qjwgjm97kvzp" target="_blank" rel="noopener noreferrer" class="btn btn-primary" onclick="if(typeof fbq==='function'){fbq('track','InitiateCheckout',{content_name:'Starter Kit Kanji N5',currency:'IDR'});}">
+              Dapatkan Starter Kit Kanji N5 di Lynk.id ↗
+            </a>
+          </div>
+        </div>
+      </section>
     </section>
 
     <!-- =========================================================
@@ -430,6 +559,7 @@
             <option value="yoon">Yōon (Kombinasi Kya, Sha, Cha, dll.)</option>
             <option value="all-hiragana">Seluruh Hiragana Lengkap</option>
             <option value="all-katakana">Seluruh Katakana Lengkap</option>
+            <option value="vocab-n5">📖 Kosakata N5 (Latihan Baca Kata)</option>
             <option value="missed">⚠️ Karakter yang Pernah Salah</option>
           </select>
 
@@ -641,6 +771,10 @@
       <span class="mobile-nav-icon">🈸</span>
       <span>Tabel</span>
     </a>
+    <a href="#vocab" class="mobile-nav-item" data-nav="vocabTab">
+      <span class="mobile-nav-icon">📖</span>
+      <span>Kosakata</span>
+    </a>
     <a href="#flashcard" class="mobile-nav-item" data-nav="flashcardTab">
       <span class="mobile-nav-icon">🗂️</span>
       <span>Kartu</span>
@@ -658,13 +792,14 @@
   <!-- Site Footer -->
   <footer class="site-footer" role="contentinfo">
     <div class="container">
-      <p>KanaLearn (かなラーン) — Media Pembelajaran Mandiri Hiragana, Katakana & Yōon.</p>
-      <p style="margin-top: 4px; font-size: 0.78rem;">100% Statis & Offline-friendly • Tanpa Server / Database</p>
+      <p>KanaLearn (かなラーン) — Media Pembelajaran Mandiri Hiragana, Katakana &amp; Yōon.</p>
+      <p style="margin-top: 4px; font-size: 0.78rem;">100% Statis &amp; Offline-friendly • Tanpa Server / Database</p>
     </div>
   </footer>
 
   <!-- Scripts -->
   <script src="js/kana-data.js"></script>
+  <script src="js/vocab-data.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/app.js"></script>

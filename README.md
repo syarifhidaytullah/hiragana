@@ -38,7 +38,14 @@ Website pembelajaran statis interaktif untuk menguasai karakter **Hiragana & Kat
    - Sound FX via Web Audio API synthesizer (bebas file eksternal).
    - Penjelasan langsung ketika jawaban salah beserta tips pelafalan.
 
-7. **Tracking Progres & Antrean Salah:**
+7. **Latihan Membaca Kosakata Dasar N5 (151 Kata):**
+   - 100% ditulis dalam huruf Kana murni (Hiragana & Katakana, tanpa kanji) untuk melatih kelancaran membaca kata utuh sebelum beralih ke Kanji.
+   - Dilengkapi audio pelafalan asli (Web Speech API), arti bahasa Indonesia, dan catatan kontekstual.
+   - Mode Uji Baca: Opsi sembunyikan romaji untuk melatih *active decoding*.
+   - Mode Latihan Kilat (Drill per kata) & Integrasi Kuis Kosakata N5.
+   - CTA Alami ke modul lanjutan: **Starter Kit Kanji N5** di Lynk.id.
+
+8. **Tracking Progres & Antrean Salah:**
    - Disimpan secara lokal di browser (`localStorage`).
    - Melacak akurasi kuis, persentase penguasaan huruf, dan streak belajar harian.
    - Antrean karakter yang pernah salah otomatis dikumpulkan untuk latihan ulang.
@@ -54,9 +61,10 @@ kana-learn/
 │   └── style.css       # Desain sistem modern bernuansa Jepang, bebas slop
 ├── js/
 │   ├── kana-data.js    # Data layer Kana, lesson, confusables & distractor generator
+│   ├── vocab-data.js   # Dataset 151 kosakata dasar N5 (Hiragana & Katakana tanpa kanji)
 │   ├── storage.js      # Pengelola state & metrik di localStorage
 │   ├── audio.js        # Engine suara: Web Speech API (ja-JP) + Web Audio API SFX
-│   └── app.js          # Controller aplikasi, filter, modal, flashcard & kuis
+│   └── app.js          # Controller aplikasi, filter, modal, flashcard, vocab & kuis
 └── README.md
 ```
 
