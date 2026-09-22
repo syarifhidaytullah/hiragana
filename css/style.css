@@ -1755,3 +1755,33 @@ main {
   opacity: 0.04;
   pointer-events: none;
 }
+
+.kana-worksheet-card {
+  margin-top: 36px;
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-subtle) 100%);
+  border: 1.5px solid var(--accent-red);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.08);
+}
+
+.kana-worksheet-card::before {
+  content: "書";
+  position: absolute;
+  right: -15px;
+  bottom: -35px;
+  font-family: var(--font-kana);
+  font-size: 11rem;
+  font-weight: 900;
+  color: var(--accent-red);
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .hide-on-small-mobile {
+    display: none !important;
+  }
+}
