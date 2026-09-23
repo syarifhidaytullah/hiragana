@@ -138,6 +138,7 @@
       <nav class="desktop-nav" aria-label="Navigasi Utama">
         <a href="#home" class="nav-link active" data-nav="homeTab">🏠 Beranda</a>
         <a href="#learn" class="nav-link" data-nav="learnTab">🈸 Tabel Kana</a>
+        <a href="#write" class="nav-link" data-nav="writeTab">✍️ Latihan Tulis</a>
         <a href="#vocab" class="nav-link" data-nav="vocabTab">📖 Kosakata N5</a>
         <a href="#flashcard" class="nav-link" data-nav="flashcardTab">🗂️ Flashcard</a>
         <a href="#quiz" class="nav-link" data-nav="quizTab">🎯 Kuis</a>
@@ -257,6 +258,21 @@
             Latihan Baca Kosakata →
           </button>
         </div>
+
+        <div class="feature-box" style="border: 1.5px solid var(--accent-red); background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-tint-red) 100%);">
+          <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+              <h3 class="feature-title" style="margin-bottom: 0;"><span class="feature-icon">✍️</span> Kanvas Latihan Menulis</h3>
+              <span style="font-size: 0.72rem; font-weight: 800; color: #FFFFFF; background: var(--accent-red); padding: 2px 8px; border-radius: 9999px;">GRATIS</span>
+            </div>
+            <p class="feature-desc">
+              Latih memori otot motorik tangan langsung di layar HP/tablet dengan kotak silang Genkouyoushi, bayangan tracing, urutan goresan resmi, dan evaluasi akurasi otomatis.
+            </p>
+          </div>
+          <button id="ctaWriteBtn" class="btn btn-primary" style="justify-content: center; width: 100%; margin-top: 8px; font-weight: 700;">
+            Mulai Latihan Menulis di HP →
+          </button>
+        </div>
       </div>
 
       <!-- Modul Latihan Fisik Cetak: Lembar Latihan Menulis Hiragana & Katakana -->
@@ -369,11 +385,16 @@
       <!-- Banner Latihan Menulis Fisik Cetak -->
       <div style="margin: 16px 0 20px; background: var(--bg-surface); border: 1px solid var(--border-medium); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md); padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
         <div style="font-size: 0.88rem; color: var(--text-primary); line-height: 1.4;">
-          ✍️ <strong>Mau latihan menulis huruf-huruf di atas?</strong> Dapatkan <em>Lembar Latihan Menulis A4 Siap Cetak</em> lengkap dengan urutan goresan &amp; kotak tracing (PDF 18 hlm).
+          ✍️ <strong>Mau latihan menulis langsung di HP?</strong> Gunakan kanvas interaktif gratis dengan kotak Genkouyoushi &amp; cek akurasi, atau dapatkan edisi cetak A4 fisik.
         </div>
-        <a href="https://lynk.id/syarifhidayatullah/yvgnkdzjk212/checkout" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.84rem; white-space: nowrap; font-weight: 700;" onclick="if(typeof fbq==='function'){fbq('track','InitiateCheckout',{content_name:'Lembar Latihan Kana Table Tab',currency:'IDR'});}">
-          Beli PDF (Rp9.900) ↗
-        </a>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-secondary" onclick="document.querySelector('[data-nav=\'writeTab\']').click()" style="padding: 8px 14px; font-size: 0.84rem; font-weight: 700;">
+            ✍️ Kanvas Menulis (Gratis)
+          </button>
+          <a href="https://lynk.id/syarifhidayatullah/yvgnkdzjk212/checkout" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.84rem; white-space: nowrap; font-weight: 700;" onclick="if(typeof fbq==='function'){fbq('track','InitiateCheckout',{content_name:'Lembar Latihan Kana Table Tab',currency:'IDR'});}">
+            Beli PDF (Rp9.900) ↗
+          </a>
+        </div>
       </div>
 
       <!-- Characters Grid -->
@@ -384,6 +405,231 @@
 
       <!-- Special Characters Container (rendered when special filter active) -->
       <div id="specialSectionContainer" style="display: none;"></div>
+    </section>
+
+    <!-- =========================================================
+         TAB: KANVAS LATIHAN MENULIS (writeTab)
+         Fitur Latihan Menulis di HP/Desktop dengan Kotak Genkouyoushi & Tracing
+         ========================================================= -->
+    <section id="writeTab" class="tab-view" aria-labelledby="writeHeadline">
+      <!-- Header & Intro -->
+      <div style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
+          <h2 id="writeHeadline" style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0;">
+            Kanvas Latihan Menulis Kana (手書き練習)
+          </h2>
+          <span class="access-badge-pill" id="writeAccessStatusPill">
+            ✨ Akses Terbuka: Gratis (Promo)
+          </span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Latih memori motorik tangan dan urutan goresan resmi langsung dari layar handphone atau tablet Anda.
+        </p>
+      </div>
+
+      <!-- Access & License Info Bar -->
+      <div class="writing-access-card">
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-primary); line-height: 1.4;">
+          <span style="font-size: 1.3rem;">🎉</span>
+          <div>
+            <strong>Mode Akses Terbuka:</strong> Fitur kanvas menulis interaktif ini dapat digunakan secara <em>bebas tanpa bayar</em> selama periode rilis saat ini.
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button id="writeLicenseInfoBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700;">
+            🔑 Info Lisensi &amp; Aktivasi
+          </button>
+          <a href="https://lynk.id/syarifhidayatullah/yvgnkdzjk212/checkout" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700;" onclick="if(typeof fbq==='function'){fbq('track','InitiateCheckout',{content_name:'Write Tab Printable Upsell',currency:'IDR'});}">
+            Beli Versi Cetak A4 (Rp9.900) ↗
+          </a>
+        </div>
+      </div>
+
+      <!-- Script & Row Filter Controls -->
+      <div class="explorer-controls" style="margin-bottom: 16px;">
+        <!-- Script Toggle: Hiragana vs Katakana -->
+        <div class="script-segmented-control" role="group" aria-label="Pilih Alfabet Menulis">
+          <button class="segment-btn active" id="writeScriptHiraBtn" data-write-script="hiragana">Hiragana (ひらがな)</button>
+          <button class="segment-btn" id="writeScriptKataBtn" data-write-script="katakana">Katakana (カタカナ)</button>
+        </div>
+
+        <!-- Row Selector Pills -->
+        <div class="filter-chips" id="writeGroupChips" role="group" aria-label="Pilih Baris Huruf">
+          <button class="chip active" data-write-group="all">Semua Baris</button>
+          <button class="chip" data-write-group="a">Baris A (あ)</button>
+          <button class="chip" data-write-group="ka">Baris Ka (か)</button>
+          <button class="chip" data-write-group="sa">Baris Sa (さ)</button>
+          <button class="chip" data-write-group="ta">Baris Ta (た)</button>
+          <button class="chip" data-write-group="na">Baris Na (な)</button>
+          <button class="chip" data-write-group="ha">Baris Ha (は)</button>
+          <button class="chip" data-write-group="ma">Baris Ma (ま)</button>
+          <button class="chip" data-write-group="ya">Baris Ya (や)</button>
+          <button class="chip" data-write-group="ra">Baris Ra (ら)</button>
+          <button class="chip" data-write-group="wa">Baris Wa/N (わ)</button>
+        </div>
+
+        <!-- Horizontal Character Chips Carousel -->
+        <div class="char-scroll-track" id="writeCharChipsContainer" aria-label="Pilih Karakter Spesifik"></div>
+      </div>
+
+      <!-- Workspace 2 Kolom (Kanvas & Panduan) -->
+      <div class="writing-workspace">
+        <!-- Kolom Kiri: Kanvas & Peralatan Gambar -->
+        <div class="writing-canvas-card">
+          <!-- Karakter Info & Audio Header -->
+          <div class="writing-char-hero">
+            <div class="char-hero-left">
+              <div class="char-hero-badge" id="writeCharGlyph">あ</div>
+              <div class="char-hero-meta">
+                <span class="char-hero-romaji" id="writeCharRomaji">a</span>
+                <span class="char-hero-strokes" id="writeCharStrokes">3 Goresan Resmi</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button id="writeAudioBtn" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.85rem;" title="Dengarkan pengucapan audio">
+                🔊 Audio
+              </button>
+              <button id="writeMasterToggleBtn" class="btn btn-primary" style="padding: 8px 12px; font-size: 0.85rem;" title="Tandai sudah dikuasai">
+                + Dikuasai
+              </button>
+            </div>
+          </div>
+
+          <!-- Kanvas Interaktif Sentuhan (HTML5 Canvas dengan Penyangga DPR) -->
+          <div class="writing-canvas-wrapper" id="canvasWrapper">
+            <canvas id="writingCanvas" width="360" height="360" aria-label="Kanvas menulis huruf Kana"></canvas>
+          </div>
+
+          <!-- Toolbar Alat Gambar (Kuas, Penghapus, Warna, Ukuran) -->
+          <div class="canvas-toolbar-row">
+            <div class="canvas-tool-group">
+              <button id="toolBrushBtn" class="tool-btn active" title="Alat Kuas Tinta">
+                🖌️ Kuas
+              </button>
+              <button id="toolEraserBtn" class="tool-btn" title="Alat Penghapus">
+                🧹 Penghapus
+              </button>
+            </div>
+
+            <!-- Palet Warna Tinta -->
+            <div class="canvas-tool-group" aria-label="Pilih Warna Tinta">
+              <button class="color-swatch-btn color-sumi active" data-color="#1e293b" title="Hitam Sumi (Standar)"></button>
+              <button class="color-swatch-btn color-vermilion" data-color="#dc2626" title="Merah Vermilion (Koreksi Guru)"></button>
+              <button class="color-swatch-btn color-indigo" data-color="#2563eb" title="Biru Indigo"></button>
+            </div>
+
+            <!-- Aksi Kanvas: Undo & Hapus Semua -->
+            <div class="canvas-tool-group">
+              <button id="writeUndoBtn" class="tool-btn" title="Batalkan goresan terakhir (Undo)">
+                ↩ Batal
+              </button>
+              <button id="writeClearBtn" class="tool-btn" title="Bersihkan seluruh coretan">
+                🗑 Hapus
+              </button>
+            </div>
+          </div>
+
+          <!-- Opsi Tampilan Kanvas (Tracing & Kotak Garis) -->
+          <div class="canvas-options-row">
+            <label class="canvas-option-label" title="Tampilkan bayangan huruf untuk panduan tracing">
+              <input type="checkbox" id="toggleGhostCheckbox" checked>
+              <span>Bayangan Tracing (Ghost)</span>
+            </label>
+            <label class="canvas-option-label" title="Tampilkan garis bantu kotak silang Genkouyoushi">
+              <input type="checkbox" id="toggleGridCheckbox" checked>
+              <span>Kotak Silang Genkouyoushi</span>
+            </label>
+          </div>
+
+          <!-- Tombol Evaluasi & Cek Kemiripan -->
+          <button id="writeEvaluateBtn" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px 16px; font-weight: 800; font-size: 0.95rem;">
+            🔍 Evaluasi Tulisan (Cek Akurasi)
+          </button>
+
+          <!-- Kartu Hasil Evaluasi (Dinamis Muncul Setelah Dicek) -->
+          <div id="accuracyResultCard" class="accuracy-card" style="display: none;">
+            <div class="accuracy-header">
+              <span style="font-weight: 800; font-size: 0.9rem; color: var(--text-primary);">Akurasi Goresan:</span>
+              <span id="accuracyScoreBadge" style="font-weight: 800; font-size: 1rem; color: var(--accent-red);">0%</span>
+            </div>
+            <div class="accuracy-meter-bar">
+              <div id="accuracyMeterFill" class="accuracy-meter-fill" style="width: 0%;"></div>
+            </div>
+            <div style="font-weight: 700; font-size: 0.86rem; color: var(--text-primary); margin-bottom: 4px;" id="accuracyGradeText">
+              -
+            </div>
+            <div class="accuracy-feedback-text" id="accuracyFeedbackText">
+              -
+            </div>
+          </div>
+
+          <!-- Tombol Navigasi Huruf (Sebelumnya & Selanjutnya) -->
+          <div style="display: flex; gap: 10px; margin-top: 4px;">
+            <button id="writePrevCharBtn" class="btn btn-secondary" style="flex: 1; justify-content: center; padding: 10px 14px;">
+              ← Sebelumnya
+            </button>
+            <button id="writeNextCharBtn" class="btn btn-primary" style="flex: 1; justify-content: center; padding: 10px 14px;">
+              Selanjutnya →
+            </button>
+          </div>
+        </div>
+
+        <!-- Kolom Kanan: Panduan Urutan Goresan & Kosakata -->
+        <div class="stroke-info-panel">
+          <!-- Kartu Panduan Urutan Goresan Resmi -->
+          <div class="stroke-guide-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0;">
+                📝 Panduan Urutan Goresan (Stroke Order)
+              </h3>
+              <span style="font-size: 0.78rem; font-weight: 700; color: var(--accent-red); background: var(--bg-tint-red); padding: 3px 8px; border-radius: var(--radius-full);">
+                Aturan Baku Kaligrafi
+              </span>
+            </div>
+
+            <!-- Daftar Langkah-Langkah Goresan -->
+            <div class="stroke-steps-list" id="writeStrokeStepsContainer"></div>
+
+            <!-- Tips Bentuk & Keseimbangan Karakter -->
+            <div style="margin-top: 16px; padding: 12px 14px; background: var(--bg-subtle); border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+              💡 <strong>Tips Proporsi:</strong> <span id="writeCharTip">Perhatikan titik pusat dan keseimbangan tarikan garis di dalam kuadran kotak.</span>
+            </div>
+          </div>
+
+          <!-- Kotak Contoh Kosakata JLPT N5 -->
+          <div class="writing-vocab-box">
+            <div>
+              <div style="font-size: 0.76rem; font-weight: 800; text-transform: uppercase; color: var(--accent-amber); letter-spacing: 0.04em;">
+                Contoh Kosakata Terkait
+              </div>
+              <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin-top: 2px;">
+                <span id="writeVocabJp">あめ</span> <span id="writeVocabRom" style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600;">(ame)</span>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <span id="writeVocabId" style="font-weight: 700; color: var(--text-primary);">Hujan / Permen</span>
+            </div>
+          </div>
+
+          <!-- Upsell Modul Cetak Lembar Latihan Fisik -->
+          <div class="kana-worksheet-card" style="margin-top: 0; padding: 22px 20px;">
+            <div style="position: relative; z-index: 2;">
+              <div style="font-size: 0.78rem; font-weight: 800; color: var(--accent-red); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
+                Ingin Latihan di Kertas Fisik?
+              </div>
+              <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin: 0 0 8px;">
+                Lembar Latihan Menulis Kana Siap Cetak (A4 PDF)
+              </h4>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;">
+                Menulis fisik di atas kertas bergaris silang terbukti mempercepat memori tangan hingga 5x lipat. Dilengkapi 46 Hiragana &amp; Katakana, variasi Dakuten/Yōon, dan lembar kotak kosong.
+              </p>
+              <a href="https://lynk.id/syarifhidayatullah/yvgnkdzjk212/checkout" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-weight: 700; font-size: 0.86rem; padding: 8px 16px;" onclick="if(typeof fbq==='function'){fbq('track','InitiateCheckout',{content_name:'Write Tab Printable Box',currency:'IDR'});}">
+                Dapatkan Lembar Latihan A4 (Rp9.900) ↗
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- =========================================================
@@ -821,6 +1067,12 @@
         </button>
       </div>
 
+      <div style="margin-top: 10px;">
+        <button id="modalWritePracticeBtn" class="btn btn-ghost" style="width: 100%; justify-content: center; border: 1.5px solid var(--accent-red); color: var(--accent-red); font-weight: 700; background: var(--bg-tint-red);">
+          ✍️ Latih Menulis Huruf Ini di Kanvas →
+        </button>
+      </div>
+
       <div class="modal-section-title">Tips Pelafalan (Untuk Penutur Indonesia)</div>
       <div id="modalTipContent" class="modal-tip-box">
         Pelafalan standar.
@@ -853,6 +1105,10 @@
       <span class="mobile-nav-icon">🈸</span>
       <span>Tabel</span>
     </a>
+    <a href="#write" class="mobile-nav-item" data-nav="writeTab">
+      <span class="mobile-nav-icon">✍️</span>
+      <span>Tulis</span>
+    </a>
     <a href="#vocab" class="mobile-nav-item" data-nav="vocabTab">
       <span class="mobile-nav-icon">📖</span>
       <span>Kosakata</span>
@@ -870,6 +1126,55 @@
       <span>Stat</span>
     </a>
   </nav>
+
+  <!-- Modal Status Lisensi & Aktivasi -->
+  <div id="writeLicenseModal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="licenseModalTitle">
+    <div class="modal-card" style="max-width: 480px;">
+      <button id="writeLicenseCloseBtn" class="modal-close-btn" aria-label="Tutup Dialog Lisensi">✕</button>
+
+      <div style="text-align: center; margin-bottom: 18px;">
+        <div style="font-size: 2.5rem; margin-bottom: 8px;">✨</div>
+        <h3 id="licenseModalTitle" style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;">
+          Status Akses &amp; Lisensi
+        </h3>
+        <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">
+          Fitur Kanvas Latihan Menulis KanaLearn saat ini dibuka <strong>100% GRATIS</strong> untuk semua pengunjung!
+        </p>
+      </div>
+
+      <div style="background: var(--bg-tint-green); border: 1px solid var(--accent-green); border-radius: var(--radius-md); padding: 14px; margin-bottom: 18px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+          <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary);">Status Akses Saat Ini:</span>
+          <span id="licenseStatusText" style="font-size: 0.8rem; font-weight: 800; color: var(--accent-green); background: #ffffff; padding: 2px 8px; border-radius: 9999px;">
+            ✓ AKTIF (GRATIS / PROMO)
+          </span>
+        </div>
+        <div style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4;">
+          Anda dapat menikmati seluruh fungsi kanvas, tracing, urutan goresan, dan evaluasi akurasi tanpa batasan.
+        </div>
+      </div>
+
+      <!-- Form Aktivasi Kode Lynk.id -->
+      <div style="border-top: 1px solid var(--border-subtle); padding-top: 16px;">
+        <label for="licenseCodeInput" style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">
+          Punya Kode Pembelian atau Order ID Lynk.id?
+        </label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="licenseCodeInput" class="search-input" placeholder="Contoh: KANALEARNPRO atau ORD-..." style="flex: 1; text-transform: uppercase;">
+          <button id="activateLicenseBtn" class="btn btn-primary" style="padding: 10px 16px; font-weight: 700;">
+            Aktivasi
+          </button>
+        </div>
+        <div id="licenseFeedbackMsg" style="font-size: 0.82rem; margin-top: 8px; display: none;"></div>
+      </div>
+
+      <div style="margin-top: 20px; text-align: center; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
+        <a href="https://lynk.id/syarifhidayatullah/yvgnkdzjk212/checkout" target="_blank" rel="noopener noreferrer" style="font-size: 0.85rem; color: var(--accent-red); font-weight: 700; text-decoration: underline;">
+          Kunjungi Produk Lembar Latihan di Lynk.id ↗
+        </a>
+      </div>
+    </div>
+  </div>
 
   <!-- Site Footer -->
   <footer class="site-footer" role="contentinfo">
@@ -893,6 +1198,7 @@
   <script src="js/vocab-data.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/audio.js"></script>
+  <script src="js/writing.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

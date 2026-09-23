@@ -75,6 +75,7 @@
 
     // Refresh view specific contents
     if (tabId === "learnTab") renderKanaSection();
+    if (tabId === "writeTab") initWritingTab();
     if (tabId === "vocabTab") renderVocabSection();
     if (tabId === "flashcardTab") initFlashcards();
     if (tabId === "quizTab" && quizQuestions.length === 0) renderQuizSetup();
@@ -485,6 +486,20 @@
         updateModalMasterButton();
         renderKanaSection();
         updateGlobalMetrics();
+      }
+    });
+  }
+
+  const modalWritePracticeBtn = document.getElementById("modalWritePracticeBtn");
+  if (modalWritePracticeBtn) {
+    modalWritePracticeBtn.addEventListener("click", () => {
+      if (activeModalEntry) {
+        const targetEntry = activeModalEntry;
+        closeModal();
+        switchTab("writeTab");
+        if (typeof window.selectWritingCharacterById === "function") {
+          window.selectWritingCharacterById(targetEntry.id, targetEntry.script);
+        }
       }
     });
   }
@@ -1470,6 +1485,428 @@
   if (ctaVocabBtn) {
     ctaVocabBtn.addEventListener("click", () => switchTab("vocabTab"));
   }
+
+  const ctaWriteBtn = document.getElementById("ctaWriteBtn");
+  if (ctaWriteBtn) {
+    ctaWriteBtn.addEventListener("click", () => switchTab("writeTab"));
+  }
+
+  /* =========================================================
+   * 15. KANVAS LATIHAN MENULIS (writeTab Controller)
+   * ========================================================= */
+  let writingCanvasInstance = null;
+  let writeCurrentScript = "hiragana";
+  let writeCurrentGroup = "all";
+  let writeActiveChar = null;
+  let writeCurrentIndex = 0;
+  let writePool = [];
+
+  function getWritingPool() {
+    const data = (window.KanaWritingData && window.KanaWritingData[writeCurrentScript]) || [];
+    if (writeCurrentGroup === "all") return data;
+    return data.filter(c => c.group === writeCurrentGroup);
+  }
+
+  function renderWritingCharChips() {
+    const container = document.getElementById("writeCharChipsContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const pool = getWritingPool();
+    writePool = pool;
+
+    pool.forEach((item, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "char-chip-btn" +
+        (writeActiveChar && writeActiveChar.id === item.id ? " active" : "") +
+        (Storage.isMastered(item.id) ? " mastered" : "");
+      btn.title = `${item.char} (${item.romaji}) - ${item.strokes} goresan`;
+
+      btn.innerHTML = `
+        <span class="chip-kana">${item.char}</span>
+        <span class="chip-romaji">${item.romaji}</span>
+      `;
+
+      btn.addEventListener("click", () => {
+        writeCurrentIndex = idx;
+        loadWritingCharacter(item);
+      });
+
+      container.appendChild(btn);
+    });
+  }
+
+  function loadWritingCharacter(charItem) {
+    if (!charItem) return;
+    writeActiveChar = charItem;
+
+    // Update Header Meta
+    const glyphEl = document.getElementById("writeCharGlyph");
+    const romajiEl = document.getElementById("writeCharRomaji");
+    const strokesEl = document.getElementById("writeCharStrokes");
+    const tipEl = document.getElementById("writeCharTip");
+    const vocabJpEl = document.getElementById("writeVocabJp");
+    const vocabRomEl = document.getElementById("writeVocabRom");
+    const vocabIdEl = document.getElementById("writeVocabId");
+    const masterBtn = document.getElementById("writeMasterToggleBtn");
+    const accuracyCard = document.getElementById("accuracyResultCard");
+
+    if (glyphEl) glyphEl.textContent = charItem.char;
+    if (romajiEl) romajiEl.textContent = charItem.romaji;
+    if (strokesEl) strokesEl.textContent = `${charItem.strokes} Goresan Resmi`;
+    if (tipEl) tipEl.textContent = charItem.tip || "Latih tarikan garis seimbang di tengah kuadran kotak.";
+
+    if (charItem.vocab) {
+      if (vocabJpEl) vocabJpEl.textContent = charItem.vocab.jp;
+      if (vocabRomEl) vocabRomEl.textContent = `(${charItem.vocab.rom})`;
+      if (vocabIdEl) vocabIdEl.textContent = charItem.vocab.id;
+    }
+
+    // Update Mastered Toggle
+    if (masterBtn) {
+      const isM = Storage.isMastered(charItem.id);
+      masterBtn.textContent = isM ? "✓ Sudah Dikuasai" : "+ Tandai Dikuasai";
+      masterBtn.className = isM ? "btn btn-secondary" : "btn btn-primary";
+      if (isM) masterBtn.style.color = "var(--accent-green)";
+      else masterBtn.style.color = "#ffffff";
+    }
+
+    // Sembunyikan hasil akurasi huruf sebelumnya
+    if (accuracyCard) accuracyCard.style.display = "none";
+
+    // Render Langkah-Langkah Goresan
+    const stepsContainer = document.getElementById("writeStrokeStepsContainer");
+    if (stepsContainer) {
+      stepsContainer.innerHTML = "";
+      if (charItem.steps && charItem.steps.length > 0) {
+        charItem.steps.forEach((step, sIdx) => {
+          const row = document.createElement("div");
+          row.className = "stroke-step-row";
+          row.innerHTML = `
+            <div class="stroke-num-badge">${sIdx + 1}</div>
+            <div style="flex: 1;">
+              <strong>Goresan ke-${sIdx + 1}:</strong> ${escapeHtml(step)}
+            </div>
+          `;
+          stepsContainer.appendChild(row);
+        });
+      }
+    }
+
+    // Set Karakter ke Kanvas
+    if (writingCanvasInstance) {
+      writingCanvasInstance.setCharacter(charItem, writeCurrentScript);
+    }
+
+    // Update active state di carousel chips
+    renderWritingCharChips();
+  }
+
+  function initWritingTab() {
+    const canvasEl = document.getElementById("writingCanvas");
+    const wrapperEl = document.getElementById("canvasWrapper");
+
+    if (!canvasEl || !wrapperEl) return;
+
+    if (!writingCanvasInstance && window.KanaWritingCanvas) {
+      writingCanvasInstance = new window.KanaWritingCanvas({
+        canvas: canvasEl,
+        container: wrapperEl
+      });
+
+      // Bind Canvas Toolbar Buttons
+      const brushBtn = document.getElementById("toolBrushBtn");
+      const eraserBtn = document.getElementById("toolEraserBtn");
+      const undoBtn = document.getElementById("writeUndoBtn");
+      const clearBtn = document.getElementById("writeClearBtn");
+      const ghostCb = document.getElementById("toggleGhostCheckbox");
+      const gridCb = document.getElementById("toggleGridCheckbox");
+      const audioBtn = document.getElementById("writeAudioBtn");
+      const masterBtn = document.getElementById("writeMasterToggleBtn");
+      const evalBtn = document.getElementById("writeEvaluateBtn");
+      const prevBtn = document.getElementById("writePrevCharBtn");
+      const nextBtn = document.getElementById("writeNextCharBtn");
+
+      if (brushBtn && eraserBtn) {
+        brushBtn.addEventListener("click", () => {
+          writingCanvasInstance.setEraser(false);
+          brushBtn.classList.add("active");
+          eraserBtn.classList.remove("active");
+        });
+
+        eraserBtn.addEventListener("click", () => {
+          writingCanvasInstance.setEraser(true);
+          eraserBtn.classList.add("active");
+          brushBtn.classList.remove("active");
+        });
+      }
+
+      // Color swatches
+      const colorBtns = document.querySelectorAll(".color-swatch-btn");
+      colorBtns.forEach(cBtn => {
+        cBtn.addEventListener("click", () => {
+          colorBtns.forEach(b => b.classList.remove("active"));
+          cBtn.classList.add("active");
+          writingCanvasInstance.setBrushColor(cBtn.getAttribute("data-color"));
+          if (brushBtn) brushBtn.classList.add("active");
+          if (eraserBtn) eraserBtn.classList.remove("active");
+        });
+      });
+
+      if (undoBtn) {
+        undoBtn.addEventListener("click", () => writingCanvasInstance.undo());
+      }
+      if (clearBtn) {
+        clearBtn.addEventListener("click", () => writingCanvasInstance.clearStrokes());
+      }
+
+      if (ghostCb) {
+        ghostCb.addEventListener("change", e => {
+          writingCanvasInstance.toggleGhost(e.target.checked);
+        });
+      }
+
+      if (gridCb) {
+        gridCb.addEventListener("change", e => {
+          writingCanvasInstance.toggleGrid(e.target.checked);
+        });
+      }
+
+      if (audioBtn) {
+        audioBtn.addEventListener("click", () => {
+          if (writeActiveChar) {
+            audioBtn.classList.add("is-speaking");
+            Audio.speakKana(writeActiveChar.char, () => audioBtn.classList.add("is-speaking"), () => audioBtn.classList.remove("is-speaking"));
+          }
+        });
+      }
+
+      if (masterBtn) {
+        masterBtn.addEventListener("click", () => {
+          if (!writeActiveChar) return;
+          Storage.toggleMastered(writeActiveChar.id);
+          const isM = Storage.isMastered(writeActiveChar.id);
+          masterBtn.textContent = isM ? "✓ Sudah Dikuasai" : "+ Tandai Dikuasai";
+          masterBtn.className = isM ? "btn btn-secondary" : "btn btn-primary";
+          if (isM) masterBtn.style.color = "var(--accent-green)";
+          else masterBtn.style.color = "#ffffff";
+          renderWritingCharChips();
+          updateGlobalMetrics();
+        });
+      }
+
+      // Evaluasi Akurasi
+      if (evalBtn) {
+        evalBtn.addEventListener("click", () => {
+          if (!writingCanvasInstance) return;
+          const res = writingCanvasInstance.evaluateAccuracy();
+          const card = document.getElementById("accuracyResultCard");
+          const scoreBadge = document.getElementById("accuracyScoreBadge");
+          const fillBar = document.getElementById("accuracyMeterFill");
+          const gradeText = document.getElementById("accuracyGradeText");
+          const feedbackText = document.getElementById("accuracyFeedbackText");
+
+          if (!card) return;
+          card.style.display = "block";
+          if (scoreBadge) scoreBadge.textContent = `${res.score}%`;
+          if (fillBar) fillBar.style.width = `${res.score}%`;
+          if (gradeText) gradeText.textContent = res.grade || "Periksa Tulisan";
+          if (feedbackText) feedbackText.textContent = res.feedback;
+
+          if (res.score >= 80 && writeActiveChar) {
+            // Tandai belajar di storage
+            if (!Storage.isMastered(writeActiveChar.id)) {
+              Storage.markCardReview(writeActiveChar.id, true);
+              updateGlobalMetrics();
+            }
+          }
+        });
+      }
+
+      // Navigasi Prev / Next
+      if (prevBtn) {
+        prevBtn.addEventListener("click", () => {
+          const pool = getWritingPool();
+          if (pool.length === 0) return;
+          writeCurrentIndex = (writeCurrentIndex - 1 + pool.length) % pool.length;
+          loadWritingCharacter(pool[writeCurrentIndex]);
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+          const pool = getWritingPool();
+          if (pool.length === 0) return;
+          writeCurrentIndex = (writeCurrentIndex + 1) % pool.length;
+          loadWritingCharacter(pool[writeCurrentIndex]);
+        });
+      }
+
+      // Script Segmented Toggle
+      const scriptHiraBtn = document.getElementById("writeScriptHiraBtn");
+      const scriptKataBtn = document.getElementById("writeScriptKataBtn");
+
+      if (scriptHiraBtn && scriptKataBtn) {
+        scriptHiraBtn.addEventListener("click", () => {
+          writeCurrentScript = "hiragana";
+          scriptHiraBtn.classList.add("active");
+          scriptKataBtn.classList.remove("active");
+          writeCurrentIndex = 0;
+          const pool = getWritingPool();
+          loadWritingCharacter(pool[0]);
+        });
+
+        scriptKataBtn.addEventListener("click", () => {
+          writeCurrentScript = "katakana";
+          scriptKataBtn.classList.add("active");
+          scriptHiraBtn.classList.remove("active");
+          writeCurrentIndex = 0;
+          const pool = getWritingPool();
+          loadWritingCharacter(pool[0]);
+        });
+      }
+
+      // Group Chips Toggle
+      const groupChips = document.querySelectorAll("[data-write-group]");
+      groupChips.forEach(chip => {
+        chip.addEventListener("click", () => {
+          groupChips.forEach(c => c.classList.remove("active"));
+          chip.classList.add("active");
+          writeCurrentGroup = chip.getAttribute("data-write-group");
+          writeCurrentIndex = 0;
+          const pool = getWritingPool();
+          if (pool.length > 0) {
+            loadWritingCharacter(pool[0]);
+          }
+        });
+      });
+
+      // License Modal Handlers
+      const licBtn = document.getElementById("writeLicenseInfoBtn");
+      const licModal = document.getElementById("writeLicenseModal");
+      const licCloseBtn = document.getElementById("writeLicenseCloseBtn");
+      const activateBtn = document.getElementById("activateLicenseBtn");
+      const licInput = document.getElementById("licenseCodeInput");
+      const licFeedback = document.getElementById("licenseFeedbackMsg");
+      const licStatusText = document.getElementById("licenseStatusText");
+
+      if (licBtn && licModal) {
+        licBtn.addEventListener("click", () => {
+          licModal.classList.add("open");
+          licModal.setAttribute("aria-hidden", "false");
+          if (licInput) licInput.value = "";
+          if (licFeedback) licFeedback.style.display = "none";
+          if (window.KanaAccess && licStatusText) {
+            const isUnl = window.KanaAccess.isUnlocked();
+            licStatusText.textContent = isUnl ? "✓ AKTIF (GRATIS / PROMO)" : "TERKUNCI";
+          }
+        });
+      }
+
+      function closeLicenseModal() {
+        if (licModal) {
+          licModal.classList.remove("open");
+          licModal.setAttribute("aria-hidden", "true");
+        }
+      }
+
+      if (licCloseBtn) licCloseBtn.addEventListener("click", closeLicenseModal);
+      if (licModal) {
+        licModal.addEventListener("click", e => {
+          if (e.target === licModal) closeLicenseModal();
+        });
+      }
+
+      if (activateBtn && licInput && window.KanaAccess) {
+        activateBtn.addEventListener("click", () => {
+          const val = licInput.value.trim();
+          const res = window.KanaAccess.activateWithCode(val);
+          if (licFeedback) {
+            licFeedback.style.display = "block";
+            licFeedback.style.color = res.success ? "var(--accent-green)" : "var(--accent-red)";
+            licFeedback.textContent = res.message;
+          }
+          if (res.success && licStatusText) {
+            licStatusText.textContent = "✓ LISENSI PRO AKTIF";
+            licStatusText.style.color = "var(--accent-green)";
+          }
+        });
+      }
+    }
+
+    // Muat Karakter Awal jika belum ada
+    if (!writeActiveChar) {
+      const pool = getWritingPool();
+      if (pool.length > 0) {
+        loadWritingCharacter(pool[0]);
+      }
+    } else {
+      loadWritingCharacter(writeActiveChar);
+    }
+
+    if (writingCanvasInstance) {
+      writingCanvasInstance.resize();
+    }
+  }
+
+  // Helper agar dipanggil dari modal atau bagian lain
+  window.selectWritingCharacterById = function (charId, script) {
+    if (script && (script === "hiragana" || script === "katakana")) {
+      writeCurrentScript = script;
+      const scriptHiraBtn = document.getElementById("writeScriptHiraBtn");
+      const scriptKataBtn = document.getElementById("writeScriptKataBtn");
+      if (scriptHiraBtn && scriptKataBtn) {
+        if (script === "hiragana") {
+          scriptHiraBtn.classList.add("active");
+          scriptKataBtn.classList.remove("active");
+        } else {
+          scriptKataBtn.classList.add("active");
+          scriptHiraBtn.classList.remove("active");
+        }
+      }
+    }
+
+    initWritingTab();
+
+    const data = (window.KanaWritingData && window.KanaWritingData[writeCurrentScript]) || [];
+    const found = data.find(c => c.id === charId || c.char === charId);
+    if (found) {
+      writeCurrentGroup = found.group || "all";
+      const groupChips = document.querySelectorAll("[data-write-group]");
+      groupChips.forEach(chip => {
+        if (chip.getAttribute("data-write-group") === writeCurrentGroup) {
+          chip.classList.add("active");
+        } else {
+          chip.classList.remove("active");
+        }
+      });
+
+      const pool = getWritingPool();
+      writeCurrentIndex = pool.findIndex(c => c.id === found.id);
+      if (writeCurrentIndex < 0) writeCurrentIndex = 0;
+      loadWritingCharacter(found);
+    }
+  };
+
+  // Deteksi URL redirect lisensi pembelian otomatis
+  if (window.KanaAccess) {
+    const actRes = window.KanaAccess.checkUrlActivation();
+    if (actRes && actRes.triggered) {
+      setTimeout(() => {
+        switchTab("writeTab");
+        alert(actRes.message);
+      }, 350);
+    }
+  }
+
+  // Handle URL hash navigation
+  if (window.location.hash) {
+    const rawHash = window.location.hash.replace("#", "");
+    if (rawHash === "write" || rawHash === "writeTab") {
+      switchTab("writeTab");
+    }
+  }
+
 
   if (heroStartBtn) {
     heroStartBtn.addEventListener("click", () => switchTab("learnTab"));
