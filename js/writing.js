@@ -654,40 +654,48 @@
 
     function getCoords(e) {
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
+      const rw = rect.width > 0 ? rect.width : (canvas.offsetWidth || 1);
+      const rh = rect.height > 0 ? rect.height : (canvas.offsetHeight || 1);
+      const scaleX = canvas.width / rw;
+      const scaleY = canvas.height / rh;
+
+      let clientX = e.clientX;
+      let clientY = e.clientY;
+
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+      }
+
+      if (typeof clientX !== "number" || isNaN(clientX)) clientX = 0;
+      if (typeof clientY !== "number" || isNaN(clientY)) clientY = 0;
+
       return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
       };
     }
 
-    // Pointer Events (Mendukung sentuhan jari HP, Stylus pen, & Mouse)
-    canvas.addEventListener("pointerdown", function (e) {
-      e.preventDefault();
-      try {
-        canvas.setPointerCapture(e.pointerId);
-      } catch (err) {}
-
+    function startDrawing(pt) {
       self.isDrawing = true;
-      const pt = getCoords(e);
       self.currentStroke = {
         color: self.isEraser ? "eraser" : self.brushColor,
         size: self.brushSize * self.dpr,
         points: [pt]
       };
       self.redraw();
-    });
+    }
 
-    canvas.addEventListener("pointermove", function (e) {
+    function moveDrawing(pt) {
       if (!self.isDrawing || !self.currentStroke) return;
-      e.preventDefault();
-      const pt = getCoords(e);
       self.currentStroke.points.push(pt);
       self.redraw();
-    });
+    }
 
-    function endStroke(e) {
+    function stopDrawing() {
       if (!self.isDrawing) return;
       self.isDrawing = false;
       if (self.currentStroke && self.currentStroke.points.length > 0) {
@@ -697,12 +705,88 @@
       self.redraw();
     }
 
-    canvas.addEventListener("pointerup", endStroke);
-    canvas.addEventListener("pointercancel", endStroke);
+    // Flag pencegah double-trigger antara touch & pointer/mouse
+    let isTouching = false;
+    let touchTimeout = null;
 
-    // Mencegah pull-to-refresh & scrolling browser saat menulis di kanvas
-    canvas.addEventListener("touchstart", function (e) { e.preventDefault(); }, { passive: false });
-    canvas.addEventListener("touchmove", function (e) { e.preventDefault(); }, { passive: false });
+    // --- 1. TOUCH EVENTS (Khusus Handphone / Layar Sentuh Mobile) ---
+    canvas.addEventListener("touchstart", function (e) {
+      if (e.touches.length > 1) return; // Abaikan multi-touch / pinch
+      e.preventDefault();
+      e.stopPropagation();
+      isTouching = true;
+      clearTimeout(touchTimeout);
+      const pt = getCoords(e);
+      startDrawing(pt);
+    }, { passive: false });
+
+    canvas.addEventListener("touchmove", function (e) {
+      if (!self.isDrawing) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const pt = getCoords(e);
+      moveDrawing(pt);
+    }, { passive: false });
+
+    canvas.addEventListener("touchend", function (e) {
+      if (!self.isDrawing) return;
+      e.preventDefault();
+      e.stopPropagation();
+      stopDrawing();
+      touchTimeout = setTimeout(() => { isTouching = false; }, 300);
+    }, { passive: false });
+
+    canvas.addEventListener("touchcancel", function (e) {
+      stopDrawing();
+      touchTimeout = setTimeout(() => { isTouching = false; }, 300);
+    }, { passive: false });
+
+    // --- 2. POINTER EVENTS (Laptop, Desktop Mouse & Stylus Pen) ---
+    canvas.addEventListener("pointerdown", function (e) {
+      if (isTouching || e.pointerType === "touch") return;
+      e.preventDefault();
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch (err) {}
+      const pt = getCoords(e);
+      startDrawing(pt);
+    });
+
+    canvas.addEventListener("pointermove", function (e) {
+      if (isTouching || e.pointerType === "touch") return;
+      if (!self.isDrawing) return;
+      e.preventDefault();
+      const pt = getCoords(e);
+      moveDrawing(pt);
+    });
+
+    function endPointer(e) {
+      if (isTouching || (e && e.pointerType === "touch")) return;
+      stopDrawing();
+    }
+
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+    canvas.addEventListener("pointerleave", endPointer);
+
+    // --- 3. MOUSE EVENTS (Fallback Tambahan untuk Browser Desktop Tua) ---
+    canvas.addEventListener("mousedown", function (e) {
+      if (isTouching) return;
+      if (e.button !== 0) return;
+      const pt = getCoords(e);
+      startDrawing(pt);
+    });
+
+    canvas.addEventListener("mousemove", function (e) {
+      if (isTouching || !self.isDrawing) return;
+      const pt = getCoords(e);
+      moveDrawing(pt);
+    });
+
+    canvas.addEventListener("mouseup", function () {
+      if (isTouching) return;
+      stopDrawing();
+    });
 
     window.addEventListener("resize", function () {
       self.resize();
@@ -712,7 +796,16 @@
   KanaWritingCanvas.prototype.resize = function () {
     if (!this.container || !this.canvas) return;
     const rect = this.container.getBoundingClientRect();
-    const size = Math.min(rect.width, 380);
+    let containerW = rect.width;
+
+    // Fallback jika container belum ter-render (misal tab display:none)
+    if (!containerW || containerW < 50) {
+      const parent = this.container.parentElement;
+      const pRect = parent ? parent.getBoundingClientRect() : null;
+      containerW = (pRect && pRect.width > 50) ? pRect.width : (window.innerWidth - 36);
+    }
+
+    const size = Math.max(260, Math.min(Math.round(containerW), 360));
 
     this.canvas.style.width = size + "px";
     this.canvas.style.height = size + "px";

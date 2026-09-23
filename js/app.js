@@ -75,7 +75,15 @@
 
     // Refresh view specific contents
     if (tabId === "learnTab") renderKanaSection();
-    if (tabId === "writeTab") initWritingTab();
+    if (tabId === "writeTab") {
+      initWritingTab();
+      requestAnimationFrame(() => {
+        if (writingCanvasInstance) writingCanvasInstance.resize();
+      });
+      setTimeout(() => {
+        if (writingCanvasInstance) writingCanvasInstance.resize();
+      }, 100);
+    }
     if (tabId === "vocabTab") renderVocabSection();
     if (tabId === "flashcardTab") initFlashcards();
     if (tabId === "quizTab" && quizQuestions.length === 0) renderQuizSetup();
